@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Erinnerungen für die Zukunft</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Startseite mit Einleitung -->
+    <div id="intro-page" class="page">
+        <div class="intro-container">
+            <div class="intro-header">
+                <div class="intro-logo">totenbilder.at</div>
+                <div class="intro-tagline">Das digitale Gedächtnis Österreichs</div>
+            </div>
+            
+            <h1 class="intro-title">Deine Stimme. Deine Geschichte. <br>Für die Ewigkeit.</h1>
+            
+            <div class="intro-content">
+                <section class="intro-section">
+                    <p class="intro-text">
+                        Es gibt Momente, Worte, Gedanken und Gefühle, die nicht in Worte zu fassen sind – 
+                        und doch sind sie das Wertvollste, das eine Person hinterlässt. Sie sind wie ein 
+                        Licht, das mit ihr erlischt.
+                    </p>
+                    
+                    <p class="intro-text">
+                        Bis jetzt. Denn deine Stimme ist das, was bleibt. Nicht geschrieben auf Papier, 
+                        das vergilbt und verblasst – sondern gehört, lebendig, atmend, in deiner Stimme, 
+                        deinem Rhythmus, deinen Pausen.
+                    </p>
+                </section>
+                
+                <section class="intro-section">
+                    <h2 class="intro-section-title">90 interessante Fragen</h2>
+                    <p class="intro-text">
+                        Das Besondere an diesen 90 Fragen ist nicht ihre Anzahl. Es ist ihre Sorgfalt. 
+                        Jede Frage wurde bewusst gewählt, um einen bestimmten Teil deines Lebens zu erfassen.
+                    </p>
+                    
+                    <p class="intro-text">
+                        Sie sind konkret – nicht abstrakt. Sie sprechen von Momenten, Gefühlen, Erinnerungen. 
+                        Von deinen Träumen und deinen Tränen. Sie erfassen <strong>den ganzen Menschen</strong> – 
+                        nicht nur die großen Meilensteine, sondern auch die kleinen, kostbaren Details, die dein Leben 
+                        zu deinem Leben gemacht haben.
+                    </p>
+                </section>
+                
+                <section class="intro-section">
+                    <h2 class="intro-section-title">Warum deine Stimme?</h2>
+                    <p class="intro-text">
+                        Schreiben ist wichtig. Aber deine Stimme ist kostbar. Sie trägt deine Persönlichkeit, 
+                        deine Wärme, deine Seele. Wenn du sprichst, sprechen auch deine Erinnerungen. Sie werden 
+                        lebendig. Und sie können bewahrt werden – für immer.
+                    </p>
+                    
+                    <p class="intro-text">
+                        Für deine Kinder. Deine Enkel. Und für jene, die du liebst und die diese Stimme 
+                        vermissen werden.
+                    </p>
+                </section>
+                
+                <div class="intro-highlight-box">
+                    <p class="intro-highlight-text">
+                        <strong>Datenhoheit:</strong> Deine Aufnahmen sind 100% dein Eigentum. 
+                        Sie werden lokal auf deinem Gerät gespeichert. Du entscheidest, mit wem du sie teilst.
+                    </p>
+                </div>
+                
+                <section class="intro-section">
+                    <h2 class="intro-section-title">So geht's am besten</h2>
+                    <div class="intro-tips">
+                        <div class="tip-card">
+                            <span class="tip-icon">⏱️</span>
+                            <p><strong>Nimm dir Zeit</strong><br><span class="tip-subtitle">5-10 Fragen pro Woche reichen.</span></p>
+                        </div>
+                        <div class="tip-card">
+                            <span class="tip-icon">🎙️</span>
+                            <p><strong>Sprich natürlich</strong><br><span class="tip-subtitle">Wie du sprichst, nicht wie du schreiben würdest.</span></p>
+                        </div>
+                        <div class="tip-card">
+                            <span class="tip-icon">❤️</span>
+                            <p><strong>Sei authentisch</strong><br><span class="tip-subtitle">Kurz oder Lang? Alle Deine Antworten sind wertvoll.</span></p>
+                        </div>
+                    </div>
+                </section>
+                
+                <p class="intro-closing">
+                    <strong>„Was würden Sie dafür geben, Ihre Eltern – oder einen liebgewonnenen Menschen – noch einmal fragen zu können?"</strong>
+                </p>
+                <p class="intro-closing-sub">
+                    Geben Sie Ihren Kindern die Chance, die Sie möglicherweise nicht hatten.
+                </p>
+            </div>
+            
+            <button class="btn-primary" onclick="startApp()">Beginne jetzt – deine Geschichte wartet</button>
+            <p class="intro-footer-note">Deine Aufnahmen sind sicher bei dir. 100% privat. 100% dein Eigentum.</p>
+        </div>
+    </div>
+
+    <!-- Kategorien-Übersicht -->
+    <div id="categories-page" class="page" style="display: none;">
+        <div class="header">
+            <button class="btn-home" onclick="backToIntro()" title="Zur Startseite">
+                <div class="logo-small">totenbilder.at</div>
+            </button>
+            <h2>Deine Lebensgeschichte</h2>
+            <p class="subtitle">Wähle eine Kategorie und beginne zu erzählen</p>
+        </div>
+        
+        <div class="categories-grid" id="categories-grid">
+            <!-- Wird dynamisch gefüllt -->
+        </div>
+    </div>
+
+    <!-- Fragen-Seite -->
+    <div id="questions-page" class="page" style="display: none;">
+        <div class="header">
+            <button class="btn-back" onclick="backToCategories()">← Zurück</button>
+            <h2 id="category-title"></h2>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-fill"></div>
+            </div>
+            <p id="progress-text" class="progress-text"></p>
+        </div>
+        
+        <div class="questions-container" id="questions-container">
+            <!-- Wird dynamisch gefüllt -->
+        </div>
+    </div>
+
+    <!-- Audio Recorder Modal -->
+    <div id="recorder-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Deine Antwort aufnehmen</h3>
+                <button class="btn-close" onclick="closeRecorder()">×</button>
+            </div>
+            
+            <div class="modal-body">
+                <p id="question-text" class="question-text"></p>
+                
+                <div class="recorder-container">
+                    <div class="recorder-display">
+                        <div class="recording-indicator" id="recording-indicator" style="display: none;">
+                            <span class="pulse"></span>
+                            <span id="timer">00:00</span>
+                        </div>
+                        <div id="recording-ready" class="recording-ready">
+                            <p>Bereit zum Aufnehmen?</p>
+                        </div>
+                    </div>
+                    
+                    <div class="recorder-controls">
+                        <button id="btn-record" class="btn-record" onclick="startRecording()">
+                            🎙️ Aufnahme starten
+                        </button>
+                        <button id="btn-stop" class="btn-record btn-stop" style="display: none;" onclick="stopRecording()">
+                            ⏹️ Aufnahme beenden
+                        </button>
+                    </div>
+                    
+                    <div id="playback-area" class="playback-area" style="display: none;">
+                        <p class="playback-label">Deine Aufnahme:</p>
+                        <audio id="audio-playback" controls class="audio-player"></audio>
+                        <div class="playback-actions">
+                            <button class="btn-secondary" onclick="retryRecording()">↻ Neu aufnehmen</button>
+                            <button class="btn-primary" onclick="saveRecording()">✓ Speichern</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
