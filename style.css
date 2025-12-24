@@ -1351,7 +1351,7 @@ html, body {
     color: var(--text-dark);
     margin-bottom: 18px;
     line-height: 1.8;
-    text-align: left;
+    text-align: center;
 }
 
 /* Small Text - Detailliert, Background-Info */
@@ -1360,7 +1360,7 @@ html, body {
     color: var(--text-light);
     margin-bottom: 18px;
     line-height: 1.8;
-    text-align: left;
+    text-align: center;
 }
 
 /* Poetic Text - Zentriert, lyrisch */
