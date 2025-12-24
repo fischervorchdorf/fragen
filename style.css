@@ -1309,3 +1309,201 @@ html, body {
         font-size: 1.1rem;
     }
 }
+
+/* ============================================
+   NEUE INTRO-STYLES - VARIANTENREICH
+   ============================================ */
+
+/* Featured Text - Größer, zentriert, prominent */
+.intro-text-featured {
+    font-size: 1.8rem;
+    text-align: center;
+    color: var(--primary-color);
+    font-weight: 600;
+    margin-bottom: 30px;
+    line-height: 1.5;
+    letter-spacing: -0.3px;
+}
+
+/* Emphasis Text - Klein, Italic, wichtige Übergänge */
+.intro-text-emphasis {
+    font-size: 1.4rem;
+    text-align: center;
+    color: var(--accent-color);
+    font-style: italic;
+    font-weight: 500;
+    margin: 25px 0;
+    letter-spacing: 1px;
+}
+
+.intro-text-emphasis-secondary {
+    font-size: 1.3rem;
+    text-align: center;
+    color: var(--secondary-color);
+    font-weight: 600;
+    margin: 25px 0;
+    letter-spacing: 0.5px;
+}
+
+/* Normal Text - Standard */
+.intro-text-normal {
+    font-size: 1rem;
+    color: var(--text-dark);
+    margin-bottom: 18px;
+    line-height: 1.8;
+    text-align: left;
+}
+
+/* Small Text - Detailliert, Background-Info */
+.intro-text-small {
+    font-size: 0.95rem;
+    color: var(--text-light);
+    margin-bottom: 18px;
+    line-height: 1.8;
+    text-align: left;
+}
+
+/* Poetic Text - Zentriert, lyrisch */
+.intro-text-poetic {
+    text-align: center;
+    font-style: italic;
+    color: var(--secondary-color);
+    margin-bottom: 25px !important;
+}
+
+/* Highlight Center - Zentral angeordnet, auffällig */
+.intro-text-highlight-center {
+    font-size: 1.2rem;
+    text-align: center;
+    color: var(--accent-color);
+    font-weight: 500;
+    margin: 22px 0;
+    font-style: italic;
+}
+
+/* Accent Highlights */
+.highlight-accent {
+    color: var(--accent-color);
+    font-weight: 600;
+}
+
+.text-bold-accent {
+    font-weight: 700;
+    color: var(--accent-color);
+}
+
+.text-bold-large {
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: var(--primary-color);
+}
+
+.text-emphasis {
+    font-weight: 600;
+    font-style: italic;
+    color: var(--accent-color);
+}
+
+/* Large Title für Sektionen */
+.intro-section-title-large {
+    font-size: 1.5rem;
+    color: var(--primary-color);
+    margin-bottom: 20px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+}
+
+.intro-section-title-accent {
+    font-size: 1.3rem;
+    color: var(--accent-color);
+    margin-bottom: 22px;
+    font-weight: 600;
+    letter-spacing: 0.4px;
+}
+
+.intro-title-accent {
+    font-size: 1.3rem;
+    color: var(--accent-color);
+    font-weight: 600;
+    margin-bottom: 15px;
+    letter-spacing: 0.3px;
+}
+
+/* Accent Box für Highlights */
+.intro-accent-box {
+    background: linear-gradient(135deg, rgba(166, 138, 100, 0.08) 0%, rgba(166, 138, 100, 0.04) 100%);
+    padding: 20px;
+    border-left: 3px solid var(--accent-color);
+    border-radius: 6px;
+    margin-bottom: 20px;
+}
+
+/* Special Highlight Box */
+.intro-highlight-special {
+    background: linear-gradient(135deg, rgba(166, 138, 100, 0.12) 0%, rgba(93, 107, 125, 0.08) 100%);
+    border-left: 4px solid var(--accent-color);
+}
+
+.intro-highlight-text-main {
+    font-size: 1.15rem;
+    color: var(--accent-color);
+    font-weight: 700;
+    margin-bottom: 12px;
+}
+
+/* Section Styling */
+.intro-section-opening {
+    background: linear-gradient(135deg, rgba(93, 107, 125, 0.1) 0%, rgba(166, 138, 100, 0.06) 100%);
+    border-left: 4px solid var(--primary-color);
+}
+
+.intro-section-questions {
+    background: linear-gradient(135deg, rgba(166, 138, 100, 0.1) 0%, rgba(139, 154, 170, 0.06) 100%);
+    border-left: 4px solid var(--accent-color);
+}
+
+.intro-section-voice {
+    background: linear-gradient(135deg, rgba(139, 154, 170, 0.1) 0%, rgba(166, 138, 100, 0.06) 100%);
+    border-left: 4px solid var(--secondary-color);
+}
+
+.intro-section-tips {
+    background: transparent;
+    border-left: none;
+    padding: 0 !important;
+}
+
+/* Quote Section */
+.intro-quote-section {
+    background: linear-gradient(135deg, rgba(93, 107, 125, 0.08) 0%, rgba(166, 138, 100, 0.08) 100%);
+    padding: 35px 40px;
+    border-radius: 10px;
+    margin: 40px 0;
+    text-align: center;
+}
+
+.intro-quote-text {
+    font-size: 1.15rem;
+    color: var(--text-dark);
+    font-weight: 500;
+    margin-bottom: 20px;
+    line-height: 1.8;
+    font-style: italic;
+}
+
+.quote-emphasis {
+    color: var(--accent-color);
+    font-weight: 700;
+}
+
+.intro-quote-response {
+    font-size: 1rem;
+    color: var(--secondary-color);
+    font-weight: 500;
+    line-height: 1.7;
+}
+
+.intro-text-closing-voice {
+    text-align: center;
+    margin-top: 20px;
+}
