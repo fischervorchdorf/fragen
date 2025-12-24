@@ -1411,6 +1411,7 @@ html, body {
     margin-bottom: 20px;
     font-weight: 700;
     letter-spacing: 0.3px;
+    text-align: center;
 }
 
 .intro-section-title-accent {
@@ -1419,6 +1420,7 @@ html, body {
     margin-bottom: 22px;
     font-weight: 600;
     letter-spacing: 0.4px;
+    text-align: center;
 }
 
 .intro-title-accent {
@@ -1427,6 +1429,7 @@ html, body {
     font-weight: 600;
     margin-bottom: 15px;
     letter-spacing: 0.3px;
+    text-align: center;
 }
 
 /* Accent Box für Highlights */
