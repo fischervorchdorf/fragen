@@ -1,5 +1,5 @@
 /* ============================================
-   KATEGORIEN UND FRAGEN DATEN - 90 FRAGEN
+   KATEGORIEN UND FRAGEN DATEN - 95 FRAGEN
    ============================================ */
 
 const CATEGORIES = [
@@ -7,35 +7,35 @@ const CATEGORIES = [
         id: 'roots-beginnings',
         name: 'Wurzeln & Anfänge',
         icon: '🌱',
-        description: 'Wo kommst du her? Wie begann dein Leben?',
+        description: 'Wo kommst du her? Wie begann dein Leben? Die Kindheit formt uns mehr, als wir oft ahnen.',
         questions: [
-            'Wo bist du geboren und aufgewachsen? Beschreibe dein Elternhaus.',
-            'Wie viele Geschwister hattest du? Was war deine Rolle unter ihnen?',
-            'Wie waren deine Eltern? Beschreibe sie als Menschen.',
+            'Wo bist du geboren und aufgewachsen? Beschreibe dein Elternhaus – nicht nur das Gebäude, sondern wie es sich anfühlte.',
+            'Wie viele Geschwister hattest du? Was war deine Rolle unter ihnen – der Beschützer, der Träumer, der Rebell?',
+            'Beschreibe deine Eltern als Menschen. Was hast du an ihnen geliebt? Was hat dich an ihnen verletzt?',
             'Was war dein Lieblingsspiel als Kind? Mit wem hast du es gespielt?',
-            'Hattest du einen besten Freund oder eine beste Freundin in der Kindheit?',
-            'Welche Schule hast du besucht? Erinnerst du dich an einen besonderen Lehrer?',
-            'Was wolltest du als Kind werden? Warum?',
-            'Gab es einen Ort aus deiner Kindheit, der dir heilig war?',
-            'Welches Ereignis aus deiner Kindheit hat dich am meisten geprägt?',
-            'Was war das Mutigste oder Verrückteste, das du als Kind gemacht hast?',
+            'Hattest du einen besten Freund oder eine beste Freundin in der Kindheit? Was ist aus dieser Freundschaft geworden?',
+            'Gab es einen Erwachsenen außerhalb deiner Familie, der an dich geglaubt hat? Was hat das mit dir gemacht?',
+            'Was wolltest du als Kind werden? Was hat dich daran fasziniert?',
+            'Gab es einen Ort aus deiner Kindheit, der dir heilig war? Einen Rückzugsort, einen geheimen Platz?',
+            'Welches Ereignis aus deiner Kindheit hat dich am meisten geprägt – im Guten oder im Schweren?',
+            'Wann hast du als Kind zum ersten Mal echte Angst gespürt? Was ist passiert?',
         ]
     },
     {
         id: 'love-relationships',
         name: 'Liebe & Beziehungen',
         icon: '❤️',
-        description: 'Die Menschen, die dein Herz berührt haben.',
+        description: 'Die Menschen, die dein Herz berührt haben. Liebe in all ihren Formen – die leichte und die schwere.',
         questions: [
-            'Wer war deine erste große Liebe? Wie hast du dich gefühlt?',
-            'Wie hast du deinen Partner/deine Partnerin kennengelernt? Erzähle die Geschichte.',
-            'Wann hast du gewusst: Das ist der/die Richtige?',
-            'Beschreibe eure Hochzeit - oder warum ihr nicht geheiratet habt.',
-            'Was war das schönste Geschenk, das du je von deinem Partner bekommen hast?',
-            'Wie habt ihr Konflikte gelöst? Was war euer Geheimnis?',
-            'Welches war euer Lieblingslied oder „euer" Ort?',
+            'Wer war deine erste große Liebe? Wie hast du dich gefühlt, wenn du an sie oder ihn gedacht hast?',
+            'Wie hast du deinen Lebenspartner kennengelernt? Erzähle die ganze Geschichte.',
+            'Wann hast du gewusst: Das ist der oder die Richtige? Gab es einen bestimmten Moment?',
+            'Beschreibe eure Hochzeit – oder warum ihr euch entschieden habt, nicht zu heiraten.',
+            'Gab es einen Moment, in dem du wusstest: Dieser Mensch sieht mich wirklich, so wie ich bin?',
+            'Was war der schwerste Moment in eurer Beziehung? Wie habt ihr ihn überstanden?',
+            'Welches war euer Lieblingslied oder euer besonderer Ort? Warum gerade dieser?',
             'Was vermisst du am meisten, wenn du an eure gemeinsame Zeit denkst?',
-            'Gab es eine Freundschaft, die so tief war wie Familie?',
+            'Gab es eine Freundschaft, die so tief war wie Familie? Erzähle von diesem Menschen.',
             'Was würdest du heute deinem jüngeren Ich über die Liebe sagen?',
         ]
     },
@@ -43,133 +43,138 @@ const CATEGORIES = [
         id: 'family-children',
         name: 'Familie & Kinder',
         icon: '👨‍👩‍👧‍👦',
-        description: 'Die nächste Generation und das Leben als Eltern oder Großeltern.',
+        description: 'Die nächste Generation. Was es bedeutet, Verantwortung für ein anderes Leben zu tragen.',
         questions: [
             'Wolltest du immer Kinder haben? Oder kam es anders als geplant?',
-            'Beschreibe den Moment, als du zum ersten Mal Mutter/Vater wurdest.',
-            'Was hat dich an der Erziehung am meisten überrascht?',
-            'Welche Werte wolltest du deinen Kindern unbedingt mitgeben?',
-            'Erzähle eine lustige Geschichte aus der Zeit, als deine Kinder klein waren.',
-            'Was war der stolzeste Moment als Elternteil?',
-            'Wenn du Großeltern bist: Was ist das Schönste daran?',
-            'Welchen Rat würdest du deinen Kindern oder Enkeln für ihr Leben mitgeben?',
+            'Beschreibe den Moment, als du zum ersten Mal Mutter oder Vater wurdest. Was hast du gefühlt?',
+            'Was hat dich an der Erziehung am meisten überrascht? Was war anders, als du es dir vorgestellt hattest?',
+            'Welche Werte wolltest du deinen Kindern unbedingt mitgeben? Ist es dir gelungen?',
+            'Gab es einen Moment, in dem dein Kind dir etwas beigebracht hat – ohne es zu wissen?',
+            'Was war der stolzeste Moment, den du als Elternteil erlebt hast?',
+            'Wenn du Großeltern bist: Was ist das Schönste daran? Was ist anders als beim eigenen Kind?',
+            'Was hast du deinen Kindern nie gesagt, obwohl du es wolltest?',
         ]
     },
     {
         id: 'work-creation',
         name: 'Arbeit & Schaffen',
         icon: '💼',
-        description: 'Was du geschaffen hast und wie du deine Tage verbracht hast.',
+        description: 'Was du geschaffen hast. Die Arbeit deiner Hände und deines Geistes.',
         questions: [
-            'Welche Ausbildung hast du gemacht? War es deine erste Wahl?',
-            'Was war dein erster Job? Wie viel hast du verdient?',
-            'Beschreibe einen typischen Arbeitstag in deinem Hauptberuf.',
-            'Gab es einen Kollegen oder Mentor, der dich besonders geprägt hat?',
-            'Was war dein größter beruflicher Erfolg? Worauf bist du stolz?',
-            'Wie hast du Beruf und Familie unter einen Hut gebracht?',
-            'Wenn du nochmal von vorne anfangen könntest - welchen Beruf würdest du wählen?',
-            'Wie war der Übergang in die Pension? Was hat sich verändert?',
+            'Musstest du einen Traum aufgeben, um praktisch zu sein? Welchen? Trauerst du ihm nach?',
+            'Wann hast du zum ersten Mal gespürt: Das kann ich. Das bin ich.',
+            'Was an deiner Arbeit hat dir Sinn gegeben – und was hat dir Kraft geraubt?',
+            'Gab es einen Kollegen oder Mentor, der dich besonders geprägt hat? Was hast du von ihm gelernt?',
+            'Was war dein größter beruflicher Erfolg? Was bedeutete er dir wirklich?',
+            'Wie hast du Beruf und Familie unter einen Hut gebracht? Was hast du dafür geopfert?',
+            'Wenn du nochmal von vorne anfangen könntest – welchen Beruf würdest du wählen? Warum?',
+            'Was hast du vermisst, als du aufgehört hast zu arbeiten? Was hat dich überrascht?',
         ]
     },
     {
         id: 'daily-routines',
-        name: 'Alltag & Gewohnheiten',
-        icon: '☕',
-        description: 'Die kleinen Rituale und Routinen, die dein Leben strukturiert haben.',
+        name: 'Alltag & Rituale',
+        icon: '🏠',
+        description: 'Die kleinen Gewohnheiten, die ein Leben ausmachen. Das Gewöhnliche, das eigentlich das Besondere ist.',
         questions: [
             'Wie sah dein perfekter Sonntagmorgen aus?',
-            'Hattest du eine Morgenroutine? Kaffee oder Tee? Zeitung?',
-            'Wie hast du Weihnachten oder andere wichtige Feste gefeiert?',
-            'Gab es ein Rezept oder Gericht, das nur du kochen konntest?',
-            'Hattest du einen Garten? Was war deine Lieblingspflanze?',
-            'Wie habt ihr als Familie gegessen? Wer saß wo am Tisch?',
+            'Gab es einen Moment am Tag, der nur dir gehörte – wo du ganz bei dir warst?',
+            'Wie hast du Weihnachten oder andere wichtige Feste gefeiert? Welche Tradition war dir am wichtigsten?',
+            'Gab es ein Rezept oder Gericht, das nur du so kochen konntest? Von wem hast du es gelernt?',
+            'Hattest du einen Garten? Was war deine Lieblingspflanze? Warum gerade diese?',
+            'Wie habt ihr als Familie gegessen? Gab es Regeln, Rituale, einen festen Platz für jeden?',
             'Welche Angewohnheit hattest du, die andere lustig oder eigenartig fanden?',
-            'Was hast du vor dem Schlafengehen gemacht?',
-            'Gab es Familientraditionen, die dir besonders wichtig waren?',
-            'Was waren die kleinen Freuden, die deinen Alltag schön gemacht haben?',
+            'Worüber hast du nachts manchmal nachgedacht, wenn du nicht schlafen konntest?',
+            'Gab es Familientraditionen, die dir besonders wichtig waren? Welche hast du weitergegeben?',
+            'Was waren die kleinen, unscheinbaren Momente, die deinen Alltag schön gemacht haben?',
         ]
     },
     {
         id: 'joy-passion',
         name: 'Freude & Leidenschaft',
-        icon: '✨',
-        description: 'Was dich zum Leuchten gebracht hat.',
+        icon: '🎨',
+        description: 'Was dich zum Leuchten gebracht hat. Die Dinge, bei denen du die Zeit vergessen hast.',
         questions: [
-            'Was war dein liebstes Hobby? Wie bist du dazu gekommen?',
-            'Welche Musik hast du geliebt? Gab es ein Lied, das „dein" Lied war?',
-            'Welches Buch oder welcher Film hat dich am meisten bewegt?',
-            'Beschreibe die schönste Reise deines Lebens. Was hast du gesehen, gefühlt?',
-            'Gab es einen Sport oder eine Aktivität, bei der du dich lebendig gefühlt hast?',
-            'Warst du Mitglied in einem Verein oder einer Gemeinschaft?',
+            'Was war dein liebstes Hobby? Wie bist du dazu gekommen? Was hat es dir bedeutet?',
+            'Welche Musik hast du geliebt? Gab es ein Lied, das dein Lied war?',
+            'Welches Buch oder welcher Film hat dich am tiefsten berührt? Warum gerade dieses?',
+            'Beschreibe die schönste Reise deines Lebens. Nicht nur, was du gesehen hast – sondern wie du dich gefühlt hast.',
+            'Gab es einen Sport oder eine Aktivität, bei der du dich richtig lebendig gefühlt hast?',
+            'Warst du Mitglied in einem Verein oder einer Gemeinschaft? Was hat dir das gegeben?',
             'Hattest du ein Talent oder eine Fertigkeit, auf die du stolz warst?',
-            'Was war das beste Geschenk, das du je bekommen hast?',
-            'Wann hast du dich das letzte Mal so richtig gefreut?',
-            'Was hat dich zum Lachen gebracht? Wer konnte dich aufheitern?',
+            'Wann hast du dich das letzte Mal wie ein Kind gefreut – ohne Grund, einfach so?',
+            'Was war das beste Geschenk, das du je bekommen hast – und warum war es so besonders?',
+            'Was hat dich zum Lachen gebracht? Wer konnte dich aufheitern, wenn dir nicht danach war?',
         ]
     },
     {
         id: 'hardship-strength',
-        name: 'Tiefe & Kraft',
+        name: 'Schwere & Stärke',
         icon: '⚡',
-        description: 'Die Momente, die dich gefordert - und gestärkt haben.',
+        description: 'Die Momente, die dich gefordert haben – und gezeigt haben, wer du wirklich bist.',
         questions: [
-            'Was war die größte Herausforderung deines Lebens?',
-            'Hast du Krieg, Flucht oder schwere wirtschaftliche Zeiten erlebt?',
-            'Welcher Verlust hat dich am meisten getroffen? Wie bist du damit umgegangen?',
-            'Gab es einen Moment, in dem du dachtest, du kannst nicht mehr weitermachen?',
-            'Wer oder was hat dir in schweren Zeiten Kraft gegeben?',
-            'Was hast du aus den schwersten Zeiten gelernt?',
-            'Gibt es etwas, das du bereust oder anders machen würdest?',
+            'Was war die größte Herausforderung deines Lebens? Wie hast du sie gemeistert?',
+            'Hast du Krieg, Flucht oder schwere wirtschaftliche Zeiten erlebt? Wie haben sie dich verändert?',
+            'Welcher Verlust hat dich am meisten getroffen? Wie bist du mit der Trauer umgegangen?',
+            'Gab es einen Moment, in dem du dachtest, du kannst nicht mehr weitermachen? Was hat dich gehalten?',
+            'Wer oder was hat dir in den schwersten Zeiten Kraft gegeben?',
+            'Was hast du aus den schwierigsten Zeiten gelernt, das du sonst nie gelernt hättest?',
+            'Gibt es etwas, das du bereust – oder das du heute anders machen würdest?',
+            'Wem hast du vergeben, obwohl es schwer war? Wer hat dir vergeben?',
+            'Wann hast du dich am einsamsten gefühlt in deinem Leben?',
             'Wie hast du gelernt, mit Abschied umzugehen?',
+            'Was ist das Mutigste, das du je getan hast – nicht körperlich, sondern emotional?',
+            'Wann hast du geweint vor Glück? Wann vor Trauer?',
         ]
     },
     {
         id: 'wisdom-sharing',
-        name: 'Weisheit & Weitergabe',
-        icon: '💎',
-        description: 'Was du aus dem Leben gelernt hast - deine Essenz.',
+        name: 'Weisheit & Vermächtnis',
+        icon: '💭',
+        description: 'Was du aus dem Leben gelernt hast. Deine Essenz – das, was bleibt.',
         questions: [
-            'Was ist dir im Leben wirklich wichtig geworden?',
+            'Was ist dir im Leben wirklich wichtig geworden – jenseits dessen, was man dir beigebracht hat?',
             'Woran glaubst du? Was gibt deinem Leben Sinn?',
             'Was bedeutet für dich ein gutes, erfülltes Leben?',
-            'Welches war die wichtigste Entscheidung deines Lebens?',
+            'Welches war die wichtigste Entscheidung deines Lebens? Wie hat sie alles verändert?',
             'Was würdest du jungen Menschen heute mit auf den Weg geben?',
             'Worauf bist du in deinem Leben am meisten stolz?',
             'Was möchtest du, dass man sich über dich erinnert?',
-            'Wenn du noch einen Wunsch frei hättest - welcher wäre das?',
+            'Wenn du noch einen Wunsch frei hättest – welcher wäre das?',
+            'Gibt es Worte, die du jemandem noch sagen möchtest, bevor es zu spät ist?',
+            'Was an dir verstehen die meisten Menschen nicht?',
+            'Wenn du einen Brief an dich selbst mit 20 schreiben könntest – was würdest du sagen?',
         ]
     },
     {
         id: 'senses-memories',
-        name: 'Sinnliches & Erinnertes',
-        icon: '👃',
-        description: 'Die Details, die eine Erinnerung lebendig machen.',
+        name: 'Sinne & Erinnerung',
+        icon: '🌸',
+        description: 'Die Details, die Erinnerungen lebendig machen. Gerüche, Klänge, Bilder – Fenster in die Vergangenheit.',
         questions: [
-            'Welcher Geruch erinnert dich sofort an deine Kindheit?',
-            'Was war dein absolutes Lieblingsgericht? Wer hat es gekocht?',
-            'Welches Geräusch oder welche Musik bringt dich sofort in eine bestimmte Zeit zurück?',
+            'Welcher Geruch bringt dich sofort zurück in deine Kindheit?',
+            'Was war dein absolutes Lieblingsgericht? Wer hat es gekocht? Wie hat es geschmeckt?',
+            'Welches Geräusch oder welche Musik versetzt dich sofort in eine bestimmte Zeit zurück?',
             'Beschreibe einen Ort, an dem du dich immer geborgen gefühlt hast.',
             'Welche Jahreszeit mochtest du am liebsten? Warum?',
-            'Erzähle eine lustige oder peinliche Geschichte, über die du heute lachen kannst.',
+            'Gibt es einen Moment, den nur du kennst – den du noch nie jemandem erzählt hast?',
             'Was war der schönste Sonnenaufgang oder Sonnenuntergang, den du je gesehen hast?',
-            'Welcher kleine, alltägliche Moment hat dich unerwartet glücklich gemacht?',
             'Was vermisst du aus früheren Zeiten am meisten?',
-            'Wenn du eine Erinnerung für immer festhalten könntest - welche wäre es?',
+            'Wenn du eine einzige Erinnerung für immer festhalten könntest – welche wäre es?',
         ]
     },
     {
         id: 'time-change',
         name: 'Zeit & Wandel',
         icon: '⏰',
-        description: 'Wie sich die Welt verändert hat - und du mit ihr.',
+        description: 'Wie sich die Welt verändert hat – und du mit ihr. Dein Platz in der Geschichte.',
         questions: [
-            'Was war die größte technische Neuerung, die du erlebt hast? (Fernsehen, Auto, Computer, Handy?)',
-            'Wie hat sich dein Heimatort im Laufe der Jahre verändert?',
-            'Was war früher besser? Was ist heute besser?',
+            'Was hat sich in der Welt verändert, das dich traurig macht? Was macht dich hoffnungsvoll?',
+            'Gibt es einen Ort, der nicht mehr existiert, den du aber immer noch in dir trägst?',
+            'Was war früher wirklich besser? Was ist heute besser?',
             'Welches historische Ereignis hat dich am meisten bewegt oder beunruhigt?',
-            'Wie haben sich die Rollen von Mann und Frau in deinem Leben verändert?',
-            'Was würdest du gerne den Menschen in 50 oder 100 Jahren erzählen?',
-            'Wenn du die Welt heute mit deiner Jugend vergleichst - was macht dich hoffnungsvoll?',
+            'Was durftest du nicht sein oder tun, weil es sich nicht gehörte? Wie hast du dich dabei gefühlt?',
+            'Was würdest du den Menschen in 50 oder 100 Jahren gerne erzählen?',
             'Was möchtest du noch erleben oder erreichen?',
         ]
     }
@@ -411,6 +416,9 @@ function renderQuestions() {
         if (hasRecording) {
             const recording = storageManager.getRecording(currentCategory.id, index);
             controlsHTML += `
+                <button class="btn-download" onclick="downloadRecording('${currentCategory.id}', ${index})">
+                    ⬇️ Herunterladen
+                </button>
                 <button class="btn-delete" onclick="deleteRecording('${currentCategory.id}', ${index})">
                     🗑️ Löschen
                 </button>
@@ -548,6 +556,52 @@ function deleteRecording(categoryId, questionIndex) {
         renderCategories();
         showNotification('Aufnahme gelöscht');
     }
+}
+
+function downloadRecording(categoryId, questionIndex) {
+    const recording = storageManager.getRecording(categoryId, questionIndex);
+    if (!recording) {
+        alert('Keine Aufnahme vorhanden!');
+        return;
+    }
+
+    // Finde die Kategorie und Frage
+    const category = CATEGORIES.find(c => c.id === categoryId);
+    if (!category) return;
+
+    // Berechne die globale Fragennummer (alle Kategorien vor dieser + Index in dieser Kategorie)
+    let globalQuestionNumber = 1;
+    for (let i = 0; i < CATEGORIES.length; i++) {
+        if (CATEGORIES[i].id === categoryId) {
+            globalQuestionNumber += questionIndex;
+            break;
+        }
+        globalQuestionNumber += CATEGORIES[i].questions.length;
+    }
+
+    // Erstelle Dateinamen
+    const fileName = `Mein Gedächtnis - Frage ${globalQuestionNumber}.wav`;
+
+    // Konvertiere Base64-Daten zu Blob
+    const byteCharacters = atob(recording.data.split(',')[1]);
+    const byteNumbers = new Array(byteCharacters.length);
+    for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+    }
+    const byteArray = new Uint8Array(byteNumbers);
+    const blob = new Blob([byteArray], { type: 'audio/wav' });
+
+    // Erstelle Download-Link
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    showNotification(`✓ ${fileName} heruntergeladen!`);
 }
 
 /* ============================================

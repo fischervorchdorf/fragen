@@ -503,6 +503,22 @@ html, body {
     color: var(--white);
 }
 
+.btn-download {
+    padding: 8px 14px;
+    background: #e3f2fd;
+    color: #1976d2;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: all 0.3s ease;
+}
+
+.btn-download:hover {
+    background: #1976d2;
+    color: var(--white);
+}
+
 /* ============================================
    BUTTONS
    ============================================ */
