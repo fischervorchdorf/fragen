@@ -109,7 +109,7 @@ const CATEGORIES = [
     },
     {
         id: 'hardship-strength',
-        name: 'Schwere & Stärke',
+        name: 'Tiefe & Kraft',
         icon: '⚡',
         description: 'Die Momente, die dich gefordert haben – und gezeigt haben, wer du wirklich bist.',
         questions: [
