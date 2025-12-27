@@ -207,7 +207,7 @@ class AudioRecorder {
             };
 
             this.mediaRecorder.onstop = () => {
-                this.audioBlob = new Blob(this.audioChunks, { type: 'audio/wav' });
+                this.audioBlob = new Blob(this.audioChunks, { type: 'audio/webm' });
                 this.isRecording = false;
             };
 
@@ -580,7 +580,7 @@ function downloadRecording(categoryId, questionIndex) {
     }
 
     // Erstelle Dateinamen
-    const fileName = `Mein Gedächtnis - Frage ${globalQuestionNumber}.wav`;
+    const fileName = `Mein Gedächtnis - Frage ${globalQuestionNumber}.webm`;
 
     // Konvertiere Base64-Daten zu Blob
     const byteCharacters = atob(recording.data.split(',')[1]);
@@ -589,7 +589,7 @@ function downloadRecording(categoryId, questionIndex) {
         byteNumbers[i] = byteCharacters.charCodeAt(i);
     }
     const byteArray = new Uint8Array(byteNumbers);
-    const blob = new Blob([byteArray], { type: 'audio/wav' });
+    const blob = new Blob([byteArray], { type: 'audio/webm' });
 
     // Erstelle Download-Link
     const url = URL.createObjectURL(blob);
