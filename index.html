@@ -178,6 +178,11 @@
                     <input type="date" id="login-geburtsdatum"
                         style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;" required>
                 </div>
+                <div id="feld-email" style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 5px;">E-Mail (für PIN-Wiederherstellung)</label>
+                    <input type="email" id="login-email" placeholder="deine@email.at"
+                        style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
+                </div>
                 <div style="margin-bottom: 20px;">
                     <label id="label-pin" style="display: block; margin-bottom: 5px;">Dein Erzähler PIN</label>
                     <input type="password" id="login-pin" placeholder="z.B. 1234"
@@ -197,6 +202,11 @@
                 <button class="btn-primary" onclick="loginUser()"
                     style="width: 100%; margin: 0; background-color: var(--primary-color);">Einloggen / Profil
                     anlegen</button>
+
+                <div id="forgot-pin-container" style="margin-top: 15px; text-align: center; display: none;">
+                    <button class="btn-secondary" onclick="forgotPin()"
+                        style="font-size: 0.85rem; padding: 8px 15px;">PIN vergessen?</button>
+                </div>
 
                 <!-- Sicherheits-FAQ / Erklärung -->
                 <div style="margin-top: 35px; border-top: 1px solid #eee; padding-top: 25px; text-align: left;">
@@ -347,6 +357,32 @@
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Email Verification Modal -->
+    <div id="email-verify-modal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 400px; text-align: center;">
+            <div class="modal-header" style="justify-content: center;">
+                <h3>E-Mail Bestätigen</h3>
+            </div>
+            <div class="modal-body">
+                <p style="font-size: 0.95rem; margin-bottom: 20px; color: var(--text-color);">
+                    Bitte gib den 6-stelligen Code ein, den wir gerade an <strong id="verify-email-display">deine
+                        E-Mail</strong> gesendet haben.
+                </p>
+                <input type="text" id="verify-code" placeholder="123456"
+                    style="width: 100%; text-align: center; letter-spacing: 5px; font-size: 1.5rem; padding: 15px; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 20px;">
+                <p id="verify-error" style="color: red; display: none; margin-bottom: 15px; font-size: 0.85rem;"></p>
+
+                <button class="btn-primary" onclick="verifyEmailCode()"
+                    style="width: 100%; margin: 0 0 10px 0;">Bestätigen</button>
+                <button class="btn-secondary" onclick="resendEmailCode()" style="width: 100%; margin: 0 0 10px 0;">Code
+                    erneut senden</button>
+                <button class="btn-text" onclick="skipVerification()"
+                    style="background: none; border: none; color: var(--text-light); text-decoration: underline; cursor: pointer; font-size: 0.85rem;">Später
+                    bestätigen</button>
             </div>
         </div>
     </div>

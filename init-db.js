@@ -33,6 +33,9 @@ async function initializeDatabase() {
         geburtsdatum DATE NOT NULL,
         erzaehler_pin VARCHAR(20) DEFAULT NULL,
         zuhoerer_pin VARCHAR(20) DEFAULT NULL,
+        email VARCHAR(255) DEFAULT NULL,
+        email_verified BOOLEAN DEFAULT FALSE,
+        email_verification_code VARCHAR(10) DEFAULT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         UNIQUE KEY unique_person (vorname, nachname, geburtsdatum)
       )
@@ -49,6 +52,21 @@ async function initializeDatabase() {
     try {
       await connection.query("ALTER TABLE speakers ADD COLUMN zuhoerer_pin VARCHAR(20) DEFAULT NULL");
       console.log('Spalte "zuhoerer_pin" zu "speakers" hinzugefügt.');
+    } catch (e) { }
+
+    try {
+      await connection.query("ALTER TABLE speakers ADD COLUMN email VARCHAR(255) DEFAULT NULL");
+      console.log('Spalte "email" zu "speakers" hinzugefügt.');
+    } catch (e) { }
+
+    try {
+      await connection.query("ALTER TABLE speakers ADD COLUMN email_verified BOOLEAN DEFAULT FALSE");
+      console.log('Spalte "email_verified" zu "speakers" hinzugefügt.');
+    } catch (e) { }
+
+    try {
+      await connection.query("ALTER TABLE speakers ADD COLUMN email_verification_code VARCHAR(10) DEFAULT NULL");
+      console.log('Spalte "email_verification_code" zu "speakers" hinzugefügt.');
     } catch (e) { }
 
     // Table: answers

@@ -417,6 +417,7 @@ async function loginUser() {
     const geburtsdatum = document.getElementById('login-geburtsdatum').value;
     const pin = document.getElementById('login-pin').value.trim();
     const zuhoererPinNeu = document.getElementById('login-zuhoerer-pin-neu').value.trim();
+    const email = document.getElementById('login-email').value.trim();
 
     const errorEl = document.getElementById('login-error');
 
@@ -427,6 +428,7 @@ async function loginUser() {
     }
 
     errorEl.style.display = 'none';
+    document.getElementById('forgot-pin-container').style.display = 'none';
 
     try {
         const payload = {
@@ -438,6 +440,9 @@ async function loginUser() {
         };
         if (currentLoginRole === 'erzaehler' && zuhoererPinNeu) {
             payload.zuhoererPinNeu = zuhoererPinNeu;
+        }
+        if (email) {
+            payload.email = email;
         }
 
         const res = await fetch('/api/auth', {
@@ -451,6 +456,11 @@ async function loginUser() {
         if (!res.ok) {
             errorEl.textContent = data.error || "Fehler bei der Anmeldung.";
             errorEl.style.display = 'block';
+
+            // Wenn der PIN falsch war, zeige den "Passwort vergessen" Button an
+            if (data.error === 'Falscher Erzähler-PIN.' || data.error === 'Falscher Zuhörer-PIN.') {
+                document.getElementById('forgot-pin-container').style.display = 'block';
+            }
             return;
         }
 
@@ -461,21 +471,120 @@ async function loginUser() {
         showNotification(data.message || "Erfolgreich eingeloggt.");
 
         document.getElementById('login-page').style.display = 'none';
-        document.getElementById('categories-page').style.display = 'block';
 
-        // Titel im Header der Categories-Page anpassen
-        const titleEl = document.querySelector('#categories-page .header h2');
-        if (isZuhoererGlobal) {
-            titleEl.textContent = `Die Lebensgeschichte von ${vorname}`;
+        // Check if email needs verification
+        if (data.email && data.emailVerified === false) {
+            document.getElementById('verify-email-display').textContent = data.email;
+            document.getElementById('email-verify-modal').style.display = 'flex';
         } else {
-            titleEl.textContent = 'Deine Lebensgeschichte';
+            showCategoriesPage(vorname);
         }
-
-        renderCategories();
     } catch (e) {
         console.error(e);
         errorEl.textContent = "Konnte keine Verbindung zum Server herstellen.";
         errorEl.style.display = 'block';
+    }
+}
+
+// Helper um auf die Kategorienseite zu wechseln (nach Login oder Verifizieren/Skippen)
+function showCategoriesPage(vorname) {
+    document.getElementById('email-verify-modal').style.display = 'none';
+    document.getElementById('categories-page').style.display = 'block';
+
+    const titleEl = document.querySelector('#categories-page .header h2');
+    if (isZuhoererGlobal) {
+        titleEl.textContent = `Die Lebensgeschichte von ${vorname}`;
+    } else {
+        titleEl.textContent = 'Deine Lebensgeschichte';
+    }
+
+    renderCategories();
+}
+
+async function verifyEmailCode() {
+    const code = document.getElementById('verify-code').value.trim();
+    const errorEl = document.getElementById('verify-error');
+    if (!code) return;
+
+    try {
+        const res = await fetch('/api/verify-email', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ speakerId: storageManager.speakerId, code })
+        });
+        const data = await res.json();
+
+        if (res.ok) {
+            showNotification('E-Mail erfolgreich verifiziert!');
+            const vorname = document.getElementById('login-vorname').value.trim() || 'Erzähler';
+            showCategoriesPage(vorname);
+        } else {
+            errorEl.textContent = data.error || 'Fehler beim Verifizieren.';
+            errorEl.style.display = 'block';
+        }
+    } catch (e) {
+        errorEl.textContent = 'Verbindungsfehler.';
+        errorEl.style.display = 'block';
+    }
+}
+
+async function resendEmailCode() {
+    const errorEl = document.getElementById('verify-error');
+    errorEl.style.display = 'none';
+
+    try {
+        const res = await fetch('/api/resend-verification', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ speakerId: storageManager.speakerId })
+        });
+        const data = await res.json();
+
+        if (res.ok) {
+            showNotification('Neuer Code wurde gesendet.');
+        } else {
+            errorEl.textContent = data.error || 'Fehler beim Senden.';
+            errorEl.style.display = 'block';
+        }
+    } catch (e) {
+        errorEl.textContent = 'Verbindungsfehler.';
+        errorEl.style.display = 'block';
+    }
+}
+
+function skipVerification() {
+    const vorname = document.getElementById('login-vorname').value.trim() || 'Erzähler';
+    showCategoriesPage(vorname);
+    // Info-Toast
+    showNotification('E-Mail kann später noch verifiziert werden.', 4000);
+}
+
+async function forgotPin() {
+    const vorname = document.getElementById('login-vorname').value.trim();
+    const nachname = document.getElementById('login-nachname').value.trim();
+    const geburtsdatum = document.getElementById('login-geburtsdatum').value;
+
+    if (!vorname || !nachname || !geburtsdatum) {
+        alert("Bitte fülle Name und Geburtsdatum aus, damit wir dein Profil finden können.");
+        return;
+    }
+
+    try {
+        const res = await fetch('/api/forgot-pin', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ vorname, nachname, geburtsdatum })
+        });
+
+        const data = await res.json();
+        if (res.ok) {
+            alert(data.message || "Anfrage zur PIN-Wiederherstellung gesendet. Bitte frage bei Martin Fischer nach oder schau in deine Mails (Coming Soon).");
+        } else {
+            alert(data.error || "Fehler bei der PIN-Wiederherstellung.");
+        }
+    } catch (e) {
+        console.error(e);
+        alert("Verbindung zum Server fehlgeschlagen.");
     }
 }
 
