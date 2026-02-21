@@ -31,12 +31,25 @@ async function initializeDatabase() {
         vorname VARCHAR(100) NOT NULL,
         nachname VARCHAR(100) NOT NULL,
         geburtsdatum DATE NOT NULL,
+        erzaehler_pin VARCHAR(20) DEFAULT NULL,
+        zuhoerer_pin VARCHAR(20) DEFAULT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         UNIQUE KEY unique_person (vorname, nachname, geburtsdatum)
       )
     `;
     await connection.query(createSpeakersTable);
     console.log('Tabelle "speakers" wurde geprüft/erstellt.');
+
+    // Füge PIN Spalten hinzu, falls sie aus einem alten Build noch nicht existieren
+    try {
+      await connection.query("ALTER TABLE speakers ADD COLUMN erzaehler_pin VARCHAR(20) DEFAULT NULL");
+      console.log('Spalte "erzaehler_pin" zu "speakers" hinzugefügt.');
+    } catch (e) { }
+
+    try {
+      await connection.query("ALTER TABLE speakers ADD COLUMN zuhoerer_pin VARCHAR(20) DEFAULT NULL");
+      console.log('Spalte "zuhoerer_pin" zu "speakers" hinzugefügt.');
+    } catch (e) { }
 
     // Table: answers
     const createAnswersTable = `

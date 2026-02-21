@@ -353,6 +353,8 @@ let currentCategory = null;
 let audioRecorder = null;
 let storageManager = null;
 let currentRecordingQuestion = null;
+let isZuhoererGlobal = false;
+let currentLoginRole = 'erzaehler';
 
 function initApp() {
     audioRecorder = new AudioRecorder();
@@ -368,14 +370,36 @@ function startApp() {
     document.getElementById('login-page').style.display = 'block';
 }
 
+function setLoginRole(role) {
+    currentLoginRole = role;
+
+    // UI Styling anpassen
+    document.getElementById('tab-erzaehler').style.background = role === 'erzaehler' ? 'var(--accent-color)' : 'var(--secondary-color)';
+    document.getElementById('tab-zuhoerer').style.background = role === 'zuhoerer' ? 'var(--accent-color)' : 'var(--secondary-color)';
+
+    // Text und Felder anpassen
+    if (role === 'erzaehler') {
+        document.getElementById('label-pin').innerText = 'Dein Erzähler PIN';
+        document.getElementById('feld-zuhoerer-pin').style.display = 'block';
+        document.getElementById('login-role-desc').innerText = 'Du nimmst deine Geschichten auf. Falls du neu bist, lege einfach deine PINs beim Anmelden fest.';
+    } else {
+        document.getElementById('label-pin').innerText = 'Der Zuhörer PIN';
+        document.getElementById('feld-zuhoerer-pin').style.display = 'none';
+        document.getElementById('login-role-desc').innerText = 'Du bist Angehöriger und möchtest den Geschichten lauschen. Bitte gib die Daten des Erzählers und den Zuhörer-PIN ein.';
+    }
+}
+
 async function loginUser() {
     const vorname = document.getElementById('login-vorname').value.trim();
     const nachname = document.getElementById('login-nachname').value.trim();
     const geburtsdatum = document.getElementById('login-geburtsdatum').value;
+    const pin = document.getElementById('login-pin').value.trim();
+    const zuhoererPinNeu = document.getElementById('login-zuhoerer-pin-neu').value.trim();
+
     const errorEl = document.getElementById('login-error');
 
-    if (!vorname || !nachname || !geburtsdatum) {
-        errorEl.textContent = "Bitte alle Felder ausfüllen.";
+    if (!vorname || !nachname || !geburtsdatum || !pin) {
+        errorEl.textContent = "Bitte alle (benötigten) Felder ausfüllen.";
         errorEl.style.display = 'block';
         return;
     }
@@ -383,10 +407,21 @@ async function loginUser() {
     errorEl.style.display = 'none';
 
     try {
+        const payload = {
+            vorname,
+            nachname,
+            geburtsdatum,
+            role: currentLoginRole,
+            pin
+        };
+        if (currentLoginRole === 'erzaehler' && zuhoererPinNeu) {
+            payload.zuhoererPinNeu = zuhoererPinNeu;
+        }
+
         const res = await fetch('/api/auth', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ vorname, nachname, geburtsdatum })
+            body: JSON.stringify(payload)
         });
 
         const data = await res.json();
@@ -398,16 +433,22 @@ async function loginUser() {
         }
 
         storageManager.setSpeaker(data.speakerId);
+        isZuhoererGlobal = data.isZuhoerer;
         await storageManager.loadData();
 
-        if (data.isExisting) {
-            showNotification(data.message || "Willkommen zurück!");
-        } else {
-            showNotification("Erfolgreich eingeloggt und Profil erstellt.");
-        }
+        showNotification(data.message || "Erfolgreich eingeloggt.");
 
         document.getElementById('login-page').style.display = 'none';
         document.getElementById('categories-page').style.display = 'block';
+
+        // Titel im Header der Categories-Page anpassen
+        const titleEl = document.querySelector('#categories-page .header h2');
+        if (isZuhoererGlobal) {
+            titleEl.textContent = `Die Lebensgeschichte von ${vorname}`;
+        } else {
+            titleEl.textContent = 'Deine Lebensgeschichte';
+        }
+
         renderCategories();
     } catch (e) {
         console.error(e);
@@ -485,14 +526,17 @@ function renderQuestions() {
             card.classList.add('answered');
         }
 
-        let controlsHTML = `
-            <div class="question-controls" style="margin-top: 20px;">
-                <button class="btn-record-question ${hasRecording ? 'answered' : ''}" 
-                        onclick="openRecorder('${currentCategory.id}', ${index})">
-                    🎙️ ${hasRecording ? 'Neue Perspektive hinzufügen (Heute)' : 'Antwort aufnehmen'}
-                </button>
-            </div>
-        `;
+        let controlsHTML = '';
+        if (!isZuhoererGlobal) {
+            controlsHTML = `
+                <div class="question-controls" style="margin-top: 20px;">
+                    <button class="btn-record-question ${hasRecording ? 'answered' : ''}" 
+                            onclick="openRecorder('${currentCategory.id}', ${index})">
+                        🎙️ ${hasRecording ? 'Neue Perspektive hinzufügen (Heute)' : 'Antwort aufnehmen'}
+                    </button>
+                </div>
+            `;
+        }
 
         let timelineHTML = '';
         if (hasRecording) {

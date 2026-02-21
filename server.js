@@ -54,28 +54,52 @@ const pool = mysql.createPool({
 
 // 1. Auth: Login oder Registrierung
 app.post('/api/auth', async (req, res) => {
-    const { vorname, nachname, geburtsdatum } = req.body;
-    if (!vorname || !nachname || !geburtsdatum) {
-        return res.status(400).json({ error: 'Vorname, Nachname und Geburtsdatum sind erforderlich.' });
+    const { vorname, nachname, geburtsdatum, role, pin, zuhoererPinNeu } = req.body;
+
+    if (!vorname || !nachname || !geburtsdatum || !role || !pin) {
+        return res.status(400).json({ error: 'Bitte fülle alle (benötigten) Felder aus.' });
     }
 
     try {
         // Prüfen, ob Person existiert
         const [rows] = await pool.execute(
-            'SELECT id FROM speakers WHERE vorname = ? AND nachname = ? AND geburtsdatum = ?',
+            'SELECT id, erzaehler_pin, zuhoerer_pin FROM speakers WHERE vorname = ? AND nachname = ? AND geburtsdatum = ?',
             [vorname, nachname, geburtsdatum]
         );
 
         if (rows.length > 0) {
+            const speaker = rows[0];
             // Person existiert bereits
-            return res.json({ speakerId: rows[0].id, isExisting: true, message: 'Person gefunden. Willkommen zurück!' });
+            if (role === 'erzaehler') {
+                if (speaker.erzaehler_pin !== pin) {
+                    return res.status(401).json({ error: 'Falscher Erzähler-PIN.' });
+                }
+                return res.json({ speakerId: speaker.id, isZuhoerer: false, message: 'Person gefunden. Willkommen zurück, Erzähler!' });
+            } else if (role === 'zuhoerer') {
+                if (speaker.zuhoerer_pin !== pin) {
+                    return res.status(401).json({ error: 'Falscher Zuhörer-PIN.' });
+                }
+                return res.json({ speakerId: speaker.id, isZuhoerer: true, message: 'Zuhörer-Login erfolgreich.' });
+            } else {
+                return res.status(400).json({ error: 'Unbekannte Rolle.' });
+            }
         } else {
-            // Neue Person anlegen
+            // Neue Person
+            if (role === 'zuhoerer') {
+                // Ein Zuhörer darf keine neue Person anlegen
+                return res.status(404).json({ error: 'Wir konnten zu diesen Daten noch keinen Erzähler finden.' });
+            }
+
+            // Neue Person anlegen (role = erzaehler)
+            if (!zuhoererPinNeu) {
+                return res.status(400).json({ error: 'Für ein neues Profil muss auch ein Zuhörer-PIN vergeben werden.' });
+            }
+
             const [result] = await pool.execute(
-                'INSERT INTO speakers (vorname, nachname, geburtsdatum) VALUES (?, ?, ?)',
-                [vorname, nachname, geburtsdatum]
+                'INSERT INTO speakers (vorname, nachname, geburtsdatum, erzaehler_pin, zuhoerer_pin) VALUES (?, ?, ?, ?, ?)',
+                [vorname, nachname, geburtsdatum, pin, zuhoererPinNeu]
             );
-            return res.status(201).json({ speakerId: result.insertId, isExisting: false, message: 'Neue Person erfolgreich angelegt.' });
+            return res.status(201).json({ speakerId: result.insertId, isZuhoerer: false, message: 'Neues Erzähler-Profil erfolgreich angelegt.' });
         }
     } catch (error) {
         console.error('Auth-Error:', error);
