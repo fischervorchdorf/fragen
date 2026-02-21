@@ -8,7 +8,10 @@ async function initializeDatabase() {
       host: process.env.DB_HOST,
       port: process.env.DB_PORT,
       user: process.env.DB_USER || 'root',
-      password: process.env.DB_PASSWORD || ''
+      password: process.env.DB_PASSWORD || '',
+      ssl: {
+        rejectUnauthorized: false
+      }
     });
 
     console.log("Verbunden mit MySQL...");
