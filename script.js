@@ -235,7 +235,7 @@ class AudioRecorder {
                 const seconds = elapsed % 60;
                 const timerElement = document.getElementById('timer');
                 if (timerElement) {
-                    timerElement.textContent = 
+                    timerElement.textContent =
                         `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
                 }
             }
@@ -264,51 +264,82 @@ class AudioRecorder {
 
 class StorageManager {
     constructor() {
-        this.storageKey = 'erinnerungen_app_data';
-        this.loadData();
+        this.answeredQuestions = {}; // { question_id: file_path }
+        this.speakerId = null;
     }
 
-    loadData() {
-        const data = localStorage.getItem(this.storageKey);
-        this.recordings = data ? JSON.parse(data) : {};
+    setSpeaker(speakerId) {
+        this.speakerId = speakerId;
     }
 
-    saveRecording(categoryId, questionIndex, audioBlob) {
-        // Konvertiere Blob zu Base64
-        const reader = new FileReader();
-        reader.readAsDataURL(audioBlob);
-        
-        return new Promise((resolve) => {
-            reader.onload = () => {
-                const key = `${categoryId}_${questionIndex}`;
-                this.recordings[key] = {
-                    data: reader.result,
-                    timestamp: new Date().toISOString()
-                };
-                this.persistData();
-                resolve();
-            };
+    async loadData() {
+        if (!this.speakerId) return;
+        try {
+            const res = await fetch(`/api/answers/${this.speakerId}`);
+            if (res.ok) {
+                const data = await res.json();
+                this.answeredQuestions = data.answeredQuestions || {};
+            }
+        } catch (error) {
+            console.error('Fehler beim Laden der Antworten:', error);
+        }
+    }
+
+    _getGlobalQuestionId(categoryId, questionIndex) {
+        let globalQuestionNumber = 1;
+        for (let i = 0; i < CATEGORIES.length; i++) {
+            if (CATEGORIES[i].id === categoryId) {
+                globalQuestionNumber += questionIndex;
+                break;
+            }
+            globalQuestionNumber += CATEGORIES[i].questions.length;
+        }
+        return globalQuestionNumber;
+    }
+
+    async saveRecording(categoryId, questionIndex, audioBlob) {
+        if (!this.speakerId) {
+            alert('Nicht angemeldet!');
+            return;
+        }
+        const qId = this._getGlobalQuestionId(categoryId, questionIndex);
+
+        const formData = new FormData();
+        formData.append('speakerId', this.speakerId);
+        formData.append('questionId', qId);
+        formData.append('audio', audioBlob, 'audio.webm');
+
+        const res = await fetch('/api/answers', {
+            method: 'POST',
+            body: formData
         });
+
+        if (!res.ok) {
+            throw new Error('Fehler beim Upload der Audiodatei.');
+        }
+
+        // Neu laden, um den aktuellen Filepath vom Server zu holen
+        await this.loadData();
     }
 
     getRecording(categoryId, questionIndex) {
-        const key = `${categoryId}_${questionIndex}`;
-        return this.recordings[key];
+        const qId = this._getGlobalQuestionId(categoryId, questionIndex);
+        if (this.answeredQuestions[qId]) {
+            return {
+                data: this.answeredQuestions[qId], // das ist jetzt nur der file_path aus der DB
+                isRemote: true
+            };
+        }
+        return null;
     }
 
     deleteRecording(categoryId, questionIndex) {
-        const key = `${categoryId}_${questionIndex}`;
-        delete this.recordings[key];
-        this.persistData();
-    }
-
-    persistData() {
-        localStorage.setItem(this.storageKey, JSON.stringify(this.recordings));
+        alert("Das Löschen von Aufnahmen ist auf dem Server zurzeit deaktiviert, um Versehentliches zu vermeiden.");
     }
 
     hasRecording(categoryId, questionIndex) {
-        const key = `${categoryId}_${questionIndex}`;
-        return key in this.recordings;
+        const qId = this._getGlobalQuestionId(categoryId, questionIndex);
+        return !!this.answeredQuestions[qId];
     }
 }
 
@@ -324,7 +355,6 @@ let currentRecordingQuestion = null;
 function initApp() {
     audioRecorder = new AudioRecorder();
     storageManager = new StorageManager();
-    renderCategories();
 }
 
 /* ============================================
@@ -333,8 +363,55 @@ function initApp() {
 
 function startApp() {
     document.getElementById('intro-page').style.display = 'none';
-    document.getElementById('categories-page').style.display = 'block';
-    renderCategories();
+    document.getElementById('login-page').style.display = 'block';
+}
+
+async function loginUser() {
+    const vorname = document.getElementById('login-vorname').value.trim();
+    const nachname = document.getElementById('login-nachname').value.trim();
+    const geburtsdatum = document.getElementById('login-geburtsdatum').value;
+    const errorEl = document.getElementById('login-error');
+
+    if (!vorname || !nachname || !geburtsdatum) {
+        errorEl.textContent = "Bitte alle Felder ausfüllen.";
+        errorEl.style.display = 'block';
+        return;
+    }
+
+    errorEl.style.display = 'none';
+
+    try {
+        const res = await fetch('/api/auth', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ vorname, nachname, geburtsdatum })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+            errorEl.textContent = data.error || "Fehler bei der Anmeldung.";
+            errorEl.style.display = 'block';
+            return;
+        }
+
+        storageManager.setSpeaker(data.speakerId);
+        await storageManager.loadData();
+
+        if (data.isExisting) {
+            showNotification(data.message || "Willkommen zurück!");
+        } else {
+            showNotification("Erfolgreich eingeloggt und Profil erstellt.");
+        }
+
+        document.getElementById('login-page').style.display = 'none';
+        document.getElementById('categories-page').style.display = 'block';
+        renderCategories();
+    } catch (e) {
+        console.error(e);
+        errorEl.textContent = "Konnte keine Verbindung zum Server herstellen.";
+        errorEl.style.display = 'block';
+    }
 }
 
 function backToCategories() {
@@ -345,6 +422,7 @@ function backToCategories() {
 
 function backToIntro() {
     document.getElementById('categories-page').style.display = 'none';
+    document.getElementById('login-page').style.display = 'none';
     document.getElementById('intro-page').style.display = 'block';
 }
 
@@ -367,7 +445,7 @@ function renderCategories() {
         const card = document.createElement('div');
         card.className = 'category-card';
         card.onclick = () => selectCategory(category.id);
-        
+
         // Zähle beantwortete Fragen
         let answeredCount = 0;
         category.questions.forEach((_, index) => {
@@ -399,7 +477,7 @@ function renderQuestions() {
     currentCategory.questions.forEach((question, index) => {
         const card = document.createElement('div');
         card.className = 'question-card';
-        
+
         const hasRecording = storageManager.hasRecording(currentCategory.id, index);
         if (hasRecording) {
             card.classList.add('answered');
@@ -462,7 +540,7 @@ function updateProgressBar() {
     const percentage = (answeredCount / total) * 100;
 
     document.getElementById('progress-fill').style.width = percentage + '%';
-    document.getElementById('progress-text').textContent = 
+    document.getElementById('progress-text').textContent =
         `${answeredCount} von ${total} Fragen beantwortet`;
 }
 
@@ -529,18 +607,18 @@ async function saveRecording() {
     }
 
     const { categoryId, questionIndex } = currentRecordingQuestion;
-    
+
     try {
         await storageManager.saveRecording(
             categoryId,
             questionIndex,
             audioRecorder.getAudioBlob()
         );
-        
+
         renderQuestions();
         renderCategories();
         closeRecorder();
-        
+
         // Kurze Bestätigungsmitteilung
         showNotification('✓ Aufnahme gespeichert!');
     } catch (error) {
@@ -582,7 +660,20 @@ function downloadRecording(categoryId, questionIndex) {
     // Erstelle Dateinamen
     const fileName = `Mein Gedächtnis - Frage ${globalQuestionNumber}.mp3`;
 
-    // Konvertiere Base64-Daten zu Blob
+    if (recording.isRemote) {
+        // Backend URL (die in `recording.data` ist ein lokaler filePath wie `/uploads/...`)
+        const url = recording.data;
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        showNotification(`✓ Download gestartet!`);
+        return;
+    }
+
+    // Alter Code (Base64), falls mal wieder Offline-Fallback eingebaut wird
     const byteCharacters = atob(recording.data.split(',')[1]);
     const byteNumbers = new Array(byteCharacters.length);
     for (let i = 0; i < byteCharacters.length; i++) {
@@ -591,25 +682,24 @@ function downloadRecording(categoryId, questionIndex) {
     const byteArray = new Uint8Array(byteNumbers);
     const webmBlob = new Blob([byteArray], { type: 'audio/webm' });
 
-    // Konvertiere WebM zu MP3
     convertWebMToMP3(webmBlob, fileName);
 }
 
 function convertWebMToMP3(webmBlob, fileName) {
     const reader = new FileReader();
-    reader.onload = function(e) {
+    reader.onload = function (e) {
         const arrayBuffer = e.target.result;
         const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        
-        audioContext.decodeAudioData(arrayBuffer, function(audioBuffer) {
+
+        audioContext.decodeAudioData(arrayBuffer, function (audioBuffer) {
             // Konvertiere zu MP3 mit lamejs
             const samples = audioBuffer.getChannelData(0);
             const sampleRate = audioBuffer.sampleRate;
-            
+
             // Konfiguriere MP3-Encoder
             const mp3Encoder = new lamejs.Mp3Encoder(1, sampleRate, 128);
             const mp3Data = [];
-            
+
             // Encode in Chunks von 1152 samples
             const maxSamples = 1152;
             for (let i = 0; i < samples.length; i += maxSamples) {
@@ -620,18 +710,18 @@ function convertWebMToMP3(webmBlob, fileName) {
                     mp3Data.push(new Int8Array(mp3buf));
                 }
             }
-            
+
             // Finalisiere die MP3
             const finalData = mp3Encoder.flush();
             if (finalData.length > 0) {
                 mp3Data.push(new Int8Array(finalData));
             }
-            
+
             // Erstelle MP3-Blob und download
             const mp3Blob = new Blob(mp3Data, { type: 'audio/mp3' });
             downloadBlob(mp3Blob, fileName);
             showNotification(`✓ ${fileName} heruntergeladen!`);
-        }, function(error) {
+        }, function (error) {
             console.error('Fehler beim Dekodieren:', error);
             // Fallback: Download als WebM wenn Konvertierung fehlschlägt
             downloadBlob(webmBlob, fileName.replace('.mp3', '.webm'));
