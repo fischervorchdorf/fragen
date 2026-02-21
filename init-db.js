@@ -47,11 +47,18 @@ async function initializeDatabase() {
         file_path VARCHAR(255) NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         INDEX (speaker_id),
-        UNIQUE KEY unique_answer (speaker_id, question_id),
         FOREIGN KEY (speaker_id) REFERENCES speakers(id) ON DELETE CASCADE
       )
     `;
     await connection.query(createAnswersTable);
+
+    // Entferne den unique index, falls er existiert (aus einer vorherigen Version), um die Historie zu erlauben
+    try {
+      await connection.query('ALTER TABLE answers DROP INDEX unique_answer');
+      console.log('Alten unique index auf "answers" entfernt.');
+    } catch (e) {
+      // Ignorieren, ist wahrscheinlich bereits gelöscht oder noch nie existiert
+    }
     console.log('Tabelle "answers" wurde geprüft/erstellt.');
 
     console.log("✅ Datenbank-Initialisierung abgeschlossen!");

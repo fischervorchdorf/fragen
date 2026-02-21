@@ -87,10 +87,17 @@ app.post('/api/auth', async (req, res) => {
 app.get('/api/answers/:speakerId', async (req, res) => {
     const { speakerId } = req.params;
     try {
-        const [rows] = await pool.execute('SELECT question_id, file_path FROM answers WHERE speaker_id = ?', [speakerId]);
+        const [rows] = await pool.execute('SELECT id, question_id, file_path, created_at FROM answers WHERE speaker_id = ? ORDER BY created_at ASC', [speakerId]);
         const answeredQuestionsMap = {};
         rows.forEach(r => {
-            answeredQuestionsMap[r.question_id] = r.file_path;
+            if (!answeredQuestionsMap[r.question_id]) {
+                answeredQuestionsMap[r.question_id] = [];
+            }
+            answeredQuestionsMap[r.question_id].push({
+                id: r.id,
+                file_path: r.file_path,
+                created_at: r.created_at
+            });
         });
         res.json({ answeredQuestions: answeredQuestionsMap });
     } catch (error) {
@@ -111,29 +118,11 @@ app.post('/api/answers', upload.single('audio'), async (req, res) => {
     try {
         const filePath = `/uploads/${file.filename}`;
 
-        // Check if an answer for this question already exists for this speaker
-        const [existing] = await pool.execute(
-            'SELECT id, file_path FROM answers WHERE speaker_id = ? AND question_id = ?',
-            [speakerId, questionId]
+        // Immer als neuen Eintrag speichern (Historie-Funktion)
+        await pool.execute(
+            'INSERT INTO answers (speaker_id, question_id, file_path) VALUES (?, ?, ?)',
+            [speakerId, questionId, filePath]
         );
-
-        if (existing.length > 0) {
-            // Update existing record
-            // Optionally format to delete old file
-            // const oldFile = path.join(__dirname, existing[0].file_path);
-            // if (fs.existsSync(oldFile)) fs.unlinkSync(oldFile);
-
-            await pool.execute(
-                'UPDATE answers SET file_path = ? WHERE speaker_id = ? AND question_id = ?',
-                [filePath, speakerId, questionId]
-            );
-        } else {
-            // Insert new record
-            await pool.execute(
-                'INSERT INTO answers (speaker_id, question_id, file_path) VALUES (?, ?, ?)',
-                [speakerId, questionId, filePath]
-            );
-        }
 
         res.status(200).json({ success: true, message: 'Audio erfolgreich gespeichert.' });
     } catch (error) {

@@ -322,15 +322,17 @@ class StorageManager {
         await this.loadData();
     }
 
-    getRecording(categoryId, questionIndex) {
+    getRecordings(categoryId, questionIndex) {
         const qId = this._getGlobalQuestionId(categoryId, questionIndex);
-        if (this.answeredQuestions[qId]) {
-            return {
-                data: this.answeredQuestions[qId], // das ist jetzt nur der file_path aus der DB
-                isRemote: true
-            };
+        if (this.answeredQuestions[qId] && this.answeredQuestions[qId].length > 0) {
+            return this.answeredQuestions[qId].map(record => ({
+                data: record.file_path,
+                isRemote: true,
+                createdAt: record.created_at,
+                id: record.id
+            }));
         }
-        return null;
+        return [];
     }
 
     deleteRecording(categoryId, questionIndex) {
@@ -339,7 +341,7 @@ class StorageManager {
 
     hasRecording(categoryId, questionIndex) {
         const qId = this._getGlobalQuestionId(categoryId, questionIndex);
-        return !!this.answeredQuestions[qId];
+        return this.answeredQuestions[qId] && this.answeredQuestions[qId].length > 0;
     }
 }
 
@@ -484,41 +486,46 @@ function renderQuestions() {
         }
 
         let controlsHTML = `
-            <div class="question-controls">
+            <div class="question-controls" style="margin-top: 20px;">
                 <button class="btn-record-question ${hasRecording ? 'answered' : ''}" 
                         onclick="openRecorder('${currentCategory.id}', ${index})">
-                    🎙️ ${hasRecording ? 'Neu aufnehmen' : 'Aufnehmen'}
+                    🎙️ ${hasRecording ? 'Neue Perspektive hinzufügen (Heute)' : 'Antwort aufnehmen'}
                 </button>
+            </div>
         `;
 
+        let timelineHTML = '';
         if (hasRecording) {
-            const recording = storageManager.getRecording(currentCategory.id, index);
-            controlsHTML += `
-                <button class="btn-download" onclick="downloadRecording('${currentCategory.id}', ${index})">
-                    ⬇️ Herunterladen
-                </button>
-                <button class="btn-delete" onclick="deleteRecording('${currentCategory.id}', ${index})">
-                    🗑️ Löschen
-                </button>
-            `;
-        }
-        controlsHTML += `</div>`;
+            const recordings = storageManager.getRecordings(currentCategory.id, index);
 
-        let audioHTML = '';
-        if (hasRecording) {
-            const recording = storageManager.getRecording(currentCategory.id, index);
-            audioHTML = `
-                <div class="recording-badge">
-                    ✓ Aufgenommen
-                </div>
-                <audio controls class="audio-player" src="${recording.data}"></audio>
-            `;
+            timelineHTML += `<div class="timeline" style="margin-top: 15px; border-left: 2px solid var(--accent-color); padding-left: 15px;">`;
+
+            recordings.forEach((rec, recIndex) => {
+                const dateObj = new Date(rec.createdAt);
+                const dateString = dateObj.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                const timeString = dateObj.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+
+                timelineHTML += `
+                    <div class="timeline-item" style="margin-bottom: 20px;">
+                        <span style="font-size: 0.85rem; color: var(--text-light); font-weight: bold;">📅 ${dateString} - ${timeString}</span>
+                        <div class="recording-badge" style="display:inline-block; margin-bottom: 5px; margin-left: 10px;">
+                            ✓ Archiviert
+                        </div>
+                        <audio controls class="audio-player" src="${rec.data}"></audio>
+                        <button class="btn-download" style="margin-top: 5px;" onclick="downloadRecording('${currentCategory.id}', ${index}, ${recIndex})">
+                            ⬇️ MP3 Herunterladen
+                        </button>
+                    </div>
+                `;
+            });
+
+            timelineHTML += `</div>`;
         }
 
         card.innerHTML = `
             <div class="question-number">Frage ${index + 1}</div>
             <p class="question-text">${question}</p>
-            ${audioHTML}
+            ${timelineHTML}
             ${controlsHTML}
         `;
 
@@ -636,18 +643,20 @@ function deleteRecording(categoryId, questionIndex) {
     }
 }
 
-function downloadRecording(categoryId, questionIndex) {
-    const recording = storageManager.getRecording(categoryId, questionIndex);
-    if (!recording) {
+function downloadRecording(categoryId, questionIndex, recordIndex = 0) {
+    const recordings = storageManager.getRecordings(categoryId, questionIndex);
+    if (!recordings || recordings.length === 0 || !recordings[recordIndex]) {
         alert('Keine Aufnahme vorhanden!');
         return;
     }
+
+    const recording = recordings[recordIndex];
 
     // Finde die Kategorie und Frage
     const category = CATEGORIES.find(c => c.id === categoryId);
     if (!category) return;
 
-    // Berechne die globale Fragennummer (alle Kategorien vor dieser + Index in dieser Kategorie)
+    // Berechne die globale Fragennummer
     let globalQuestionNumber = 1;
     for (let i = 0; i < CATEGORIES.length; i++) {
         if (CATEGORIES[i].id === categoryId) {
@@ -657,8 +666,9 @@ function downloadRecording(categoryId, questionIndex) {
         globalQuestionNumber += CATEGORIES[i].questions.length;
     }
 
-    // Erstelle Dateinamen
-    const fileName = `Mein Gedächtnis - Frage ${globalQuestionNumber}.mp3`;
+    const dateObj = new Date(recording.createdAt);
+    const dateString = dateObj.toLocaleDateString('de-DE', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\./g, '-');
+    const fileName = `Frage ${globalQuestionNumber} - ${dateString}.mp3`;
 
     if (recording.isRemote) {
         // Backend URL (die in `recording.data` ist ein lokaler filePath wie `/uploads/...`)
