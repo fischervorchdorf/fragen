@@ -603,8 +603,16 @@ function renderQuestions() {
             timelineHTML += `</div>`;
         }
 
+        // Escape simple quotes for the onclick handler
+        const escapedQuestion = question.replace(/"/g, '&quot;').replace(/'/g, "\\'");
+
         card.innerHTML = `
-            <div class="question-number">Frage ${index + 1}</div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <div class="question-number" style="margin-bottom: 0;">Frage ${index + 1}</div>
+                <button class="btn-read-aloud" onclick="readQuestionOutLoud('${escapedQuestion}')" style="background: none; border: none; cursor: pointer; font-size: 1.5rem; margin: 0; padding: 5px; opacity: 0.8; transition: opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.8'" title="Frage vorlesen lassen">
+                    🔊
+                </button>
+            </div>
             <p class="question-text">${question}</p>
             ${timelineHTML}
             ${controlsHTML}
