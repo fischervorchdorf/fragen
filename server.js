@@ -110,18 +110,38 @@ app.post('/api/auth', async (req, res) => {
 // 2. Erhalte bereits beantwortete Fragen eines Sprechers
 app.get('/api/answers/:speakerId', async (req, res) => {
     const { speakerId } = req.params;
+    const isZuhoerer = req.query.isZuhoerer === 'true';
+
     try {
-        const [rows] = await pool.execute('SELECT id, question_id, file_path, created_at FROM answers WHERE speaker_id = ? ORDER BY created_at ASC', [speakerId]);
+        const [rows] = await pool.execute('SELECT id, question_id, file_path, sperre_bis, created_at FROM answers WHERE speaker_id = ? ORDER BY created_at ASC', [speakerId]);
         const answeredQuestionsMap = {};
+
+        const now = new Date();
+        now.setHours(0, 0, 0, 0); // Nur Datum vergleichen
+
         rows.forEach(r => {
             if (!answeredQuestionsMap[r.question_id]) {
                 answeredQuestionsMap[r.question_id] = [];
             }
-            answeredQuestionsMap[r.question_id].push({
+
+            let responseData = {
                 id: r.id,
                 file_path: r.file_path,
-                created_at: r.created_at
-            });
+                sperre_bis: r.sperre_bis,
+                created_at: r.created_at,
+                is_locked: false
+            };
+
+            // Zeitkapsel-Prüfung nur für Zuhörer
+            if (isZuhoerer && r.sperre_bis) {
+                const sperreDate = new Date(r.sperre_bis);
+                if (sperreDate > now) {
+                    responseData.is_locked = true;
+                    responseData.file_path = null; // Dateipfad ausblenden!
+                }
+            }
+
+            answeredQuestionsMap[r.question_id].push(responseData);
         });
         res.json({ answeredQuestions: answeredQuestionsMap });
     } catch (error) {
@@ -132,7 +152,7 @@ app.get('/api/answers/:speakerId', async (req, res) => {
 
 // 3. Audio Upload speichern
 app.post('/api/answers', upload.single('audio'), async (req, res) => {
-    const { speakerId, questionId } = req.body;
+    const { speakerId, questionId, sperreBis } = req.body;
     const file = req.file;
 
     if (!speakerId || !questionId || !file) {
@@ -142,10 +162,13 @@ app.post('/api/answers', upload.single('audio'), async (req, res) => {
     try {
         const filePath = `/uploads/${file.filename}`;
 
-        // Immer als neuen Eintrag speichern (Historie-Funktion)
+        // sorge dafür, dass leere sperreBis strings als NULL in der DB landen
+        const sperreBisValue = sperreBis && sperreBis.trim() !== '' ? sperreBis : null;
+
+        // Immer als neuen Eintrag speichern (Historie-Funktion + Zeitkapsel)
         await pool.execute(
-            'INSERT INTO answers (speaker_id, question_id, file_path) VALUES (?, ?, ?)',
-            [speakerId, questionId, filePath]
+            'INSERT INTO answers (speaker_id, question_id, file_path, sperre_bis) VALUES (?, ?, ?, ?)',
+            [speakerId, questionId, filePath, sperreBisValue]
         );
 
         res.status(200).json({ success: true, message: 'Audio erfolgreich gespeichert.' });

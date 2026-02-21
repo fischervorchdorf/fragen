@@ -297,25 +297,41 @@ class StorageManager {
         return globalQuestionNumber;
     }
 
-    async saveRecording(categoryId, questionIndex, audioBlob) {
+    async saveRecording(categoryId, questionIndex, audioBlob, sperreBis) {
         if (!this.speakerId) {
             alert('Nicht angemeldet!');
             return;
         }
-        const qId = this._getGlobalQuestionId(categoryId, questionIndex);
+
+        const questionId = this._getGlobalQuestionId(categoryId, questionIndex);
 
         const formData = new FormData();
         formData.append('speakerId', this.speakerId);
-        formData.append('questionId', qId);
-        formData.append('audio', audioBlob, 'audio.webm');
+        formData.append('questionId', questionId);
+        formData.append('audio', audioBlob, 'aufnahme.mp3'); // multer erwartet den key 'audio'
+        if (sperreBis) {
+            formData.append('sperreBis', sperreBis);
+        }
 
-        const res = await fetch('/api/answers', {
-            method: 'POST',
-            body: formData
-        });
+        try {
+            const tempBtn = document.querySelector('.playback-actions .btn-primary');
+            if (tempBtn) tempBtn.innerText = "Lädt hoch...";
 
-        if (!res.ok) {
-            throw new Error('Fehler beim Upload der Audiodatei.');
+            // Zum Backend senden
+            const res = await fetch('/api/answers', {
+                method: 'POST',
+                body: formData
+            });
+
+            if (!res.ok) {
+                console.error("Fehler beim Hochladen:", await res.text());
+                alert("Upload-Fehler");
+                return;
+            }
+        } catch (error) {
+            console.error('Fehler beim Speichern:', error);
+            alert('Fehler beim Speichern der Aufnahme!');
+            return;
         }
 
         // Neu laden, um den aktuellen Filepath vom Server zu holen
@@ -326,10 +342,12 @@ class StorageManager {
         const qId = this._getGlobalQuestionId(categoryId, questionIndex);
         if (this.answeredQuestions[qId] && this.answeredQuestions[qId].length > 0) {
             return this.answeredQuestions[qId].map(record => ({
-                data: record.file_path,
+                data: record.file_path, // null wenn gesperrt
                 isRemote: true,
                 createdAt: record.created_at,
-                id: record.id
+                id: record.id,
+                is_locked: record.is_locked,
+                sperre_bis: record.sperre_bis
             }));
         }
         return [];
@@ -549,18 +567,37 @@ function renderQuestions() {
                 const dateString = dateObj.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
                 const timeString = dateObj.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
 
-                timelineHTML += `
-                    <div class="timeline-item" style="margin-bottom: 20px;">
-                        <span style="font-size: 0.85rem; color: var(--text-light); font-weight: bold;">📅 ${dateString} - ${timeString}</span>
-                        <div class="recording-badge" style="display:inline-block; margin-bottom: 5px; margin-left: 10px;">
-                            ✓ Archiviert
+                if (rec.is_locked) {
+                    const unlockDateObj = new Date(rec.sperre_bis);
+                    const unlockString = unlockDateObj.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
+
+                    timelineHTML += `
+                        <div class="timeline-item" style="margin-bottom: 20px;">
+                            <span style="font-size: 0.85rem; color: var(--text-light); font-weight: bold;">📅 ${dateString} - ${timeString}</span>
+                            <div class="recording-badge" style="display:inline-block; margin-bottom: 5px; margin-left: 10px; background-color: var(--secondary-color);">
+                                🔒 Gesperrt
+                            </div>
+                            <div style="background: rgba(0,0,0,0.05); padding: 15px; border-radius: 8px; margin-top: 5px;">
+                                <p style="margin: 0; color: var(--text-light); font-size: 0.9rem;">
+                                    Diese Erinnerung wurde vom Erzähler als Zeitkapsel verschlossen und ist erst ab dem <strong>${unlockString}</strong> hörbar.
+                                </p>
+                            </div>
                         </div>
-                        <audio controls class="audio-player" src="${rec.data}"></audio>
-                        <button class="btn-download" style="margin-top: 5px;" onclick="downloadRecording('${currentCategory.id}', ${index}, ${recIndex})">
-                            ⬇️ MP3 Herunterladen
-                        </button>
-                    </div>
-                `;
+                    `;
+                } else {
+                    timelineHTML += `
+                        <div class="timeline-item" style="margin-bottom: 20px;">
+                            <span style="font-size: 0.85rem; color: var(--text-light); font-weight: bold;">📅 ${dateString} - ${timeString}</span>
+                            <div class="recording-badge" style="display:inline-block; margin-bottom: 5px; margin-left: 10px;">
+                                ✓ Archiviert
+                            </div>
+                            <audio controls class="audio-player" src="${rec.data}"></audio>
+                            <button class="btn-download" style="margin-top: 5px;" onclick="downloadRecording('${currentCategory.id}', ${index}, ${recIndex})">
+                                ⬇️ MP3 Herunterladen
+                            </button>
+                        </div>
+                    `;
+                }
             });
 
             timelineHTML += `</div>`;
@@ -652,30 +689,36 @@ function retryRecording() {
 }
 
 async function saveRecording() {
-    if (!currentRecordingQuestion || !audioRecorder.getAudioBlob()) {
-        alert('Keine Aufnahme vorhanden!');
-        return;
+    const audioBlob = audioRecorder.getAudioBlob();
+    if (!audioBlob) return;
+
+    if (!currentCategory || currentRecordingQuestion === null) return;
+
+    const sperreBis = document.getElementById('recorder-sperre-bis').value;
+
+    const btn = document.querySelector('.playback-actions .btn-primary');
+    if (btn) btn.disabled = true;
+
+    await storageManager.saveRecording(
+        currentRecordingQuestion.categoryId,
+        currentRecordingQuestion.questionIndex,
+        audioBlob,
+        sperreBis
+    );
+
+    if (btn) btn.disabled = false;
+
+    // Setze das Sperrdatum Feld danach wieder zurück
+    document.getElementById('recorder-sperre-bis').value = '';
+
+    closeRecorder();
+    if (currentCategory) {
+        renderQuestions(currentCategory);
     }
+    renderCategories();
 
-    const { categoryId, questionIndex } = currentRecordingQuestion;
-
-    try {
-        await storageManager.saveRecording(
-            categoryId,
-            questionIndex,
-            audioRecorder.getAudioBlob()
-        );
-
-        renderQuestions();
-        renderCategories();
-        closeRecorder();
-
-        // Kurze Bestätigungsmitteilung
-        showNotification('✓ Aufnahme gespeichert!');
-    } catch (error) {
-        console.error('Fehler beim Speichern:', error);
-        alert('Fehler beim Speichern der Aufnahme!');
-    }
+    // Kurze Bestätigungsmitteilung
+    showNotification('✓ Aufnahme gespeichert!');
 }
 
 function deleteRecording(categoryId, questionIndex) {
@@ -695,6 +738,11 @@ function downloadRecording(categoryId, questionIndex, recordIndex = 0) {
     }
 
     const recording = recordings[recordIndex];
+
+    if (recording.is_locked) {
+        alert('Diese Aufnahme ist gesperrt und kann momentan nicht heruntergeladen werden.');
+        return;
+    }
 
     // Finde die Kategorie und Frage
     const category = CATEGORIES.find(c => c.id === categoryId);

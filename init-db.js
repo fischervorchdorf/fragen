@@ -58,12 +58,19 @@ async function initializeDatabase() {
         speaker_id INT NOT NULL,
         question_id INT NOT NULL,
         file_path VARCHAR(255) NOT NULL,
+        sperre_bis DATE DEFAULT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         INDEX (speaker_id),
         FOREIGN KEY (speaker_id) REFERENCES speakers(id) ON DELETE CASCADE
       )
     `;
     await connection.query(createAnswersTable);
+
+    // Füge sperre_bis Spalte hinzu, falls sie aus einem alten Build noch nicht existiert
+    try {
+      await connection.query("ALTER TABLE answers ADD COLUMN sperre_bis DATE DEFAULT NULL");
+      console.log('Spalte "sperre_bis" zu "answers" hinzugefügt.');
+    } catch (e) { }
 
     // Entferne den unique index, falls er existiert (aus einer vorherigen Version), um die Historie zu erlauben
     try {
