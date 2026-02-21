@@ -258,9 +258,20 @@
     <!-- Kategorien-Übersicht -->
     <div id="categories-page" class="page" style="display: none;">
         <div class="header">
-            <button class="btn-home" onclick="backToIntro()" title="Zur Startseite">
-                <div class="logo-small">totenbilder.at</div>
-            </button>
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
+                <button class="btn-home" onclick="logoutUser()" title="Sicher abmelden" style="margin: 0;">
+                    <div class="logo-small" style="margin: 0; text-align: left;">totenbilder.at</div>
+                    <div style="font-size: 0.75rem; color: var(--text-light); margin-top: 5px; text-align: left;">←
+                        Abmelden</div>
+                </button>
+                <div id="profil-btn-container" style="display: flex; gap: 10px;">
+                    <button class="btn-secondary" onclick="openProfileModal()"
+                        style="padding: 6px 15px; font-size: 0.85rem; border: none; background: #e2e8f0; color: var(--primary-color);">⚙️
+                        PIN ändern</button>
+                    <button class="btn-secondary" onclick="logoutUser()"
+                        style="padding: 6px 15px; font-size: 0.85rem; border: none; background: #fee2e2; color: #b91c1c;">Abmelden</button>
+                </div>
+            </div>
             <h2>Deine Lebensgeschichte</h2>
             <p class="subtitle">Wähle eine Kategorie und beginne zu erzählen</p>
         </div>
@@ -383,6 +394,41 @@
                 <button class="btn-text" onclick="skipVerification()"
                     style="background: none; border: none; color: var(--text-light); text-decoration: underline; cursor: pointer; font-size: 0.85rem;">Später
                     bestätigen</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profil & PIN Modal -->
+    <div id="profile-modal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 450px;">
+            <div class="modal-header">
+                <h3>Sicherheitseinstellungen</h3>
+                <button class="btn-close" onclick="closeProfileModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <p style="font-size: 0.9rem; color: var(--text-light); margin-bottom: 20px;">Hier kannst du neue PINs
+                    für dich oder deine Angehörigen setzen. Lass das Feld leer, wenn du den PIN nicht ändern möchtest.
+                </p>
+
+                <div style="margin-bottom: 25px;">
+                    <label
+                        style="display: block; margin-bottom: 5px; font-weight: bold; color: var(--primary-color);">Dein
+                        Erzähler-PIN</label>
+                    <input type="password" id="profile-erzaehler-pin" placeholder="Neuer Erzähler-PIN"
+                        style="width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 1rem;">
+
+                    <label
+                        style="display: block; margin-bottom: 5px; font-weight: bold; color: var(--primary-color); margin-top: 15px;">Der
+                        Zuhörer-PIN für Angehörige</label>
+                    <input type="password" id="profile-zuhoerer-pin" placeholder="Neuer Zuhörer-PIN"
+                        style="width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 1rem;">
+                </div>
+
+                <p id="profile-error"
+                    style="color: red; display: none; margin-bottom: 15px; font-size: 0.85rem; text-align: center;"></p>
+
+                <button class="btn-primary" onclick="saveProfilePins()" style="width: 100%; margin: 0 0 15px 0;">PINs
+                    speichern</button>
             </div>
         </div>
     </div>

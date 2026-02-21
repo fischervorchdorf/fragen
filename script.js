@@ -494,11 +494,73 @@ function showCategoriesPage(vorname) {
     const titleEl = document.querySelector('#categories-page .header h2');
     if (isZuhoererGlobal) {
         titleEl.textContent = `Die Lebensgeschichte von ${vorname}`;
+        document.getElementById('profil-btn-container').style.display = 'none';
     } else {
         titleEl.textContent = 'Deine Lebensgeschichte';
+        document.getElementById('profil-btn-container').style.display = 'flex';
     }
 
     renderCategories();
+}
+
+function logoutUser() {
+    storageManager.setSpeaker(null);
+    document.getElementById('categories-page').style.display = 'none';
+    document.getElementById('questions-page').style.display = 'none';
+    document.getElementById('profile-modal').style.display = 'none';
+
+    // Formulare zurücksetzen
+    document.getElementById('login-pin').value = '';
+    document.getElementById('login-zuhoerer-pin-neu').value = '';
+
+    document.getElementById('intro-page').style.display = 'block';
+    showNotification('Sicher abgemeldet.');
+}
+
+function openProfileModal() {
+    document.getElementById('profile-erzaehler-pin').value = '';
+    document.getElementById('profile-zuhoerer-pin').value = '';
+    document.getElementById('profile-error').style.display = 'none';
+    document.getElementById('profile-modal').style.display = 'flex';
+}
+
+function closeProfileModal() {
+    document.getElementById('profile-modal').style.display = 'none';
+}
+
+async function saveProfilePins() {
+    const errorEl = document.getElementById('profile-error');
+    const neuerErzaehler = document.getElementById('profile-erzaehler-pin').value.trim();
+    const neuerZuhoerer = document.getElementById('profile-zuhoerer-pin').value.trim();
+
+    if (!neuerErzaehler && !neuerZuhoerer) {
+        closeProfileModal();
+        return;
+    }
+
+    try {
+        const res = await fetch('/api/change-pin', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                speakerId: storageManager.speakerId,
+                erzaehlerPin: neuerErzaehler || undefined,
+                zuhoererPin: neuerZuhoerer || undefined
+            })
+        });
+
+        const data = await res.json();
+        if (res.ok) {
+            showNotification('PINs erfolgreich aktualisiert!');
+            closeProfileModal();
+        } else {
+            errorEl.textContent = data.error || 'Fehler beim Speichern.';
+            errorEl.style.display = 'block';
+        }
+    } catch (e) {
+        errorEl.textContent = 'Verbindungsfehler.';
+        errorEl.style.display = 'block';
+    }
 }
 
 async function verifyEmailCode() {

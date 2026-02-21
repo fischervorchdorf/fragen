@@ -332,6 +332,25 @@ app.post('/api/answers', upload.single('audio'), async (req, res) => {
     }
 });
 
+// 4. PINs ändern (für eingeloggte User)
+app.post('/api/change-pin', async (req, res) => {
+    const { speakerId, erzaehlerPin, zuhoererPin } = req.body;
+    if (!speakerId) return res.status(400).json({ error: 'Nicht berechtigt.' });
+
+    try {
+        if (erzaehlerPin) {
+            await pool.execute('UPDATE speakers SET erzaehler_pin = ? WHERE id = ?', [erzaehlerPin, speakerId]);
+        }
+        if (zuhoererPin) {
+            await pool.execute('UPDATE speakers SET zuhoerer_pin = ? WHERE id = ?', [zuhoererPin, speakerId]);
+        }
+        res.json({ success: true, message: 'PINs aktualisiert.' });
+    } catch (e) {
+        console.error('Change PIN Error:', e);
+        res.status(500).json({ error: 'Fehler beim Speichern der neuen PINs in der DB.' });
+    }
+});
+
 // --- ADMIN ROUTES ---
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'geheim123';
 
