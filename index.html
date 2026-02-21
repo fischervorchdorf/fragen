@@ -312,6 +312,24 @@
                         <p class="playback-label">Deine Aufnahme:</p>
                         <audio id="audio-playback" controls class="audio-player"></audio>
 
+                        <div id="emotion-area"
+                            style="margin-top: 15px; margin-bottom: 5px; background: rgba(0,0,0,0.02); padding: 15px; border-radius: 8px; border-left: 3px solid var(--accent-color);">
+                            <label style="display:block; font-weight: bold; margin-bottom: 5px;">❤️ Wie hast du dich
+                                dabei gefühlt?</label>
+                            <p style="font-size: 0.85rem; color: var(--text-light); margin-bottom: 10px;">Markiere diese
+                                Erinnerung optional mit einer Emotion.</p>
+                            <select id="recorder-emotion"
+                                style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; background: white; font-size: 1rem;">
+                                <option value="">Aussuchen...</option>
+                                <option value="stolz">🌟 Mächtig stolz</option>
+                                <option value="liebevoll">❤️ Voller Liebe</option>
+                                <option value="nostalgisch">🕰️ Etwas nostalgisch</option>
+                                <option value="lustig">😂 Herrlich lustig</option>
+                                <option value="schwer">⛈️ Eine schwere Zeit</option>
+                                <option value="dankbar">🙏 Sehr dankbar</option>
+                            </select>
+                        </div>
+
                         <div id="time-capsule-area"
                             style="margin-top: 15px; margin-bottom: 15px; background: rgba(0,0,0,0.05); padding: 15px; border-radius: 8px;">
                             <label style="display:block; font-weight: bold; margin-bottom: 5px;">⏳ Zeitkapsel-Sperre

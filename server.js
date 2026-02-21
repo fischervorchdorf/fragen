@@ -113,7 +113,7 @@ app.get('/api/answers/:speakerId', async (req, res) => {
     const isZuhoerer = req.query.isZuhoerer === 'true';
 
     try {
-        const [rows] = await pool.execute('SELECT id, question_id, file_path, sperre_bis, created_at FROM answers WHERE speaker_id = ? ORDER BY created_at ASC', [speakerId]);
+        const [rows] = await pool.execute('SELECT id, question_id, file_path, sperre_bis, emotion, created_at FROM answers WHERE speaker_id = ? ORDER BY created_at ASC', [speakerId]);
         const answeredQuestionsMap = {};
 
         const now = new Date();
@@ -128,6 +128,7 @@ app.get('/api/answers/:speakerId', async (req, res) => {
                 id: r.id,
                 file_path: r.file_path,
                 sperre_bis: r.sperre_bis,
+                emotion: r.emotion,
                 created_at: r.created_at,
                 is_locked: false
             };
@@ -152,7 +153,7 @@ app.get('/api/answers/:speakerId', async (req, res) => {
 
 // 3. Audio Upload speichern
 app.post('/api/answers', upload.single('audio'), async (req, res) => {
-    const { speakerId, questionId, sperreBis } = req.body;
+    const { speakerId, questionId, sperreBis, emotion } = req.body;
     const file = req.file;
 
     if (!speakerId || !questionId || !file) {
@@ -164,11 +165,13 @@ app.post('/api/answers', upload.single('audio'), async (req, res) => {
 
         // sorge dafür, dass leere sperreBis strings als NULL in der DB landen
         const sperreBisValue = sperreBis && sperreBis.trim() !== '' ? sperreBis : null;
+        // Leere Emotionen als NULL
+        const emotionValue = emotion && emotion.trim() !== '' ? emotion : null;
 
-        // Immer als neuen Eintrag speichern (Historie-Funktion + Zeitkapsel)
+        // Immer als neuen Eintrag speichern (Historie-Funktion + Zeitkapsel + Emotion)
         await pool.execute(
-            'INSERT INTO answers (speaker_id, question_id, file_path, sperre_bis) VALUES (?, ?, ?, ?)',
-            [speakerId, questionId, filePath, sperreBisValue]
+            'INSERT INTO answers (speaker_id, question_id, file_path, sperre_bis, emotion) VALUES (?, ?, ?, ?, ?)',
+            [speakerId, questionId, filePath, sperreBisValue, emotionValue]
         );
 
         res.status(200).json({ success: true, message: 'Audio erfolgreich gespeichert.' });

@@ -297,7 +297,7 @@ class StorageManager {
         return globalQuestionNumber;
     }
 
-    async saveRecording(categoryId, questionIndex, audioBlob, sperreBis) {
+    async saveRecording(categoryId, questionIndex, audioBlob, sperreBis, emotion) {
         if (!this.speakerId) {
             alert('Nicht angemeldet!');
             return;
@@ -311,6 +311,9 @@ class StorageManager {
         formData.append('audio', audioBlob, 'aufnahme.mp3'); // multer erwartet den key 'audio'
         if (sperreBis) {
             formData.append('sperreBis', sperreBis);
+        }
+        if (emotion) {
+            formData.append('emotion', emotion);
         }
 
         try {
@@ -347,7 +350,8 @@ class StorageManager {
                 createdAt: record.created_at,
                 id: record.id,
                 is_locked: record.is_locked,
-                sperre_bis: record.sperre_bis
+                sperre_bis: record.sperre_bis,
+                emotion: record.emotion
             }));
         }
         return [];
@@ -562,10 +566,25 @@ function renderQuestions() {
 
             timelineHTML += `<div class="timeline" style="margin-top: 15px; border-left: 2px solid var(--accent-color); padding-left: 15px;">`;
 
+            const emotionLabels = {
+                'stolz': '🌟 Mächtig stolz',
+                'liebevoll': '❤️ Voller Liebe',
+                'nostalgisch': '🕰️ Etwas nostalgisch',
+                'lustig': '😂 Herrlich lustig',
+                'schwer': '⛈️ Eine schwere Zeit',
+                'dankbar': '🙏 Sehr dankbar'
+            };
+
             recordings.forEach((rec, recIndex) => {
                 const dateObj = new Date(rec.createdAt);
                 const dateString = dateObj.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
                 const timeString = dateObj.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+
+                const emotionBadgeHTML = rec.emotion ? `
+                    <div style="display:inline-block; margin-bottom: 5px; margin-left: 10px; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; background-color: #f0f0f0; border: 1px solid #ddd; color: #555;">
+                        ${emotionLabels[rec.emotion] || rec.emotion}
+                    </div>
+                ` : '';
 
                 if (rec.is_locked) {
                     const unlockDateObj = new Date(rec.sperre_bis);
@@ -577,6 +596,7 @@ function renderQuestions() {
                             <div class="recording-badge" style="display:inline-block; margin-bottom: 5px; margin-left: 10px; background-color: var(--secondary-color);">
                                 🔒 Gesperrt
                             </div>
+                            ${emotionBadgeHTML}
                             <div style="background: rgba(0,0,0,0.05); padding: 15px; border-radius: 8px; margin-top: 5px;">
                                 <p style="margin: 0; color: var(--text-light); font-size: 0.9rem;">
                                     Diese Erinnerung wurde vom Erzähler als Zeitkapsel verschlossen und ist erst ab dem <strong>${unlockString}</strong> hörbar.
@@ -591,6 +611,7 @@ function renderQuestions() {
                             <div class="recording-badge" style="display:inline-block; margin-bottom: 5px; margin-left: 10px;">
                                 ✓ Archiviert
                             </div>
+                            ${emotionBadgeHTML}
                             <audio controls class="audio-player" src="${rec.data}"></audio>
                             <button class="btn-download" style="margin-top: 5px;" onclick="downloadRecording('${currentCategory.id}', ${index}, ${recIndex})">
                                 ⬇️ MP3 Herunterladen
@@ -703,6 +724,7 @@ async function saveRecording() {
     if (!currentCategory || currentRecordingQuestion === null) return;
 
     const sperreBis = document.getElementById('recorder-sperre-bis').value;
+    const emotion = document.getElementById('recorder-emotion').value;
 
     const btn = document.querySelector('.playback-actions .btn-primary');
     if (btn) btn.disabled = true;
@@ -711,13 +733,15 @@ async function saveRecording() {
         currentRecordingQuestion.categoryId,
         currentRecordingQuestion.questionIndex,
         audioBlob,
-        sperreBis
+        sperreBis,
+        emotion
     );
 
     if (btn) btn.disabled = false;
 
-    // Setze das Sperrdatum Feld danach wieder zurück
+    // Setze die Felder danach wieder zurück
     document.getElementById('recorder-sperre-bis').value = '';
+    document.getElementById('recorder-emotion').value = '';
 
     closeRecorder();
     if (currentCategory) {

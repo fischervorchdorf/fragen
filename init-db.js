@@ -59,6 +59,7 @@ async function initializeDatabase() {
         question_id INT NOT NULL,
         file_path VARCHAR(255) NOT NULL,
         sperre_bis DATE DEFAULT NULL,
+        emotion VARCHAR(50) DEFAULT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         INDEX (speaker_id),
         FOREIGN KEY (speaker_id) REFERENCES speakers(id) ON DELETE CASCADE
@@ -70,6 +71,11 @@ async function initializeDatabase() {
     try {
       await connection.query("ALTER TABLE answers ADD COLUMN sperre_bis DATE DEFAULT NULL");
       console.log('Spalte "sperre_bis" zu "answers" hinzugefügt.');
+    } catch (e) { }
+
+    try {
+      await connection.query("ALTER TABLE answers ADD COLUMN emotion VARCHAR(50) DEFAULT NULL");
+      console.log('Spalte "emotion" zu "answers" hinzugefügt.');
     } catch (e) { }
 
     // Entferne den unique index, falls er existiert (aus einer vorherigen Version), um die Historie zu erlauben
