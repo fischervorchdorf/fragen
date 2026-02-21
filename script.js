@@ -801,7 +801,7 @@ function renderQuestions() {
         card.innerHTML = `
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                 <div class="question-number" style="margin-bottom: 0;">Frage ${index + 1}</div>
-                <button class="btn-read-aloud" onclick="readQuestionOutLoud('${escapedQuestion}')" style="background: none; border: none; cursor: pointer; font-size: 1.5rem; margin: 0; padding: 5px; opacity: 0.8; transition: opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.8'" title="Frage vorlesen lassen">
+                <button class="btn-read-aloud" onclick="readQuestionOutLoud('${escapedQuestion}', this)" style="background: none; border: none; cursor: pointer; font-size: 1.5rem; margin: 0; padding: 5px; opacity: 0.8; transition: opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.8'" title="Frage vorlesen lassen">
                     🔊
                 </button>
             </div>
@@ -830,6 +830,65 @@ function updateProgressBar() {
     document.getElementById('progress-fill').style.width = percentage + '%';
     document.getElementById('progress-text').textContent =
         `${answeredCount} von ${total} Fragen beantwortet`;
+}
+
+let currentUtterance = null;
+let currentSpeakerButton = null;
+
+function readQuestionOutLoud(text, buttonElement) {
+    if ('speechSynthesis' in window) {
+        // Falls aktuell etwas vorgelesen wird
+        if (window.speechSynthesis.speaking) {
+            window.speechSynthesis.cancel();
+
+            // Icon des vorherigen Buttons zurücksetzen
+            if (currentSpeakerButton) {
+                currentSpeakerButton.innerText = '🔊';
+                currentSpeakerButton.style.opacity = '0.8';
+                currentSpeakerButton.style.color = '';
+            }
+
+            // Wenn der gleiche Text noch einmal angeklickt wird, nur stoppen
+            if (currentUtterance && currentUtterance.text === text) {
+                currentUtterance = null;
+                currentSpeakerButton = null;
+                return;
+            }
+        }
+
+        currentUtterance = new SpeechSynthesisUtterance(text);
+        currentUtterance.lang = 'de-DE';
+        currentUtterance.rate = 0.9; // Leicht langsamer für bessere Verständlichkeit
+
+        if (buttonElement) {
+            currentSpeakerButton = buttonElement;
+            currentUtterance.onstart = () => {
+                buttonElement.innerText = '🗣️';
+                buttonElement.style.opacity = '1';
+                buttonElement.style.color = 'var(--accent-color, #ff6b6b)';
+            };
+            currentUtterance.onend = () => {
+                if (currentSpeakerButton === buttonElement) {
+                    buttonElement.innerText = '🔊';
+                    buttonElement.style.opacity = '0.8';
+                    buttonElement.style.color = '';
+                    currentSpeakerButton = null;
+                }
+            };
+            currentUtterance.onerror = () => {
+                if (currentSpeakerButton === buttonElement) {
+                    buttonElement.innerText = '🔊';
+                    buttonElement.style.opacity = '0.8';
+                    buttonElement.style.color = '';
+                    currentSpeakerButton = null;
+                }
+            };
+        }
+
+        window.speechSynthesis.speak(currentUtterance);
+    } else {
+        alert("Vorlesen wird von deinem Browser leider nicht unterstützt.");
+    }
 }
 
 /* ============================================
