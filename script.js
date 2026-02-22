@@ -207,7 +207,13 @@ class AudioRecorder {
             };
 
             this.mediaRecorder.onstop = () => {
-                this.audioBlob = new Blob(this.audioChunks, { type: 'audio/webm' });
+                const mimeType = this.mediaRecorder.mimeType || 'audio/webm';
+                let ext = 'webm';
+                if (mimeType.includes('mp4') || mimeType.includes('m4a')) ext = 'm4a';
+                if (mimeType.includes('ogg')) ext = 'ogg';
+
+                this.audioBlob = new Blob(this.audioChunks, { type: mimeType });
+                this.audioExtension = ext;
                 this.isRecording = false;
             };
 
@@ -248,6 +254,10 @@ class AudioRecorder {
 
     getAudioBlob() {
         return this.audioBlob;
+    }
+
+    getAudioExtension() {
+        return this.audioExtension || 'webm';
     }
 
     getAudioUrl() {
@@ -297,7 +307,7 @@ class StorageManager {
         return globalQuestionNumber;
     }
 
-    async saveRecording(categoryId, questionIndex, audioBlob, sperreBis, emotion) {
+    async saveRecording(categoryId, questionIndex, audioBlob, audioExtension, sperreBis, emotion) {
         if (!this.speakerId) {
             alert('Nicht angemeldet!');
             return;
@@ -308,7 +318,7 @@ class StorageManager {
         const formData = new FormData();
         formData.append('speakerId', this.speakerId);
         formData.append('questionId', questionId);
-        formData.append('audio', audioBlob, 'aufnahme.mp3'); // multer erwartet den key 'audio'
+        formData.append('audio', audioBlob, `aufnahme.${audioExtension || 'webm'}`); // multer erwartet den key 'audio'
         if (sperreBis) {
             formData.append('sperreBis', sperreBis);
         }
@@ -903,6 +913,7 @@ async function saveRecording() {
         currentRecordingQuestion.categoryId,
         currentRecordingQuestion.questionIndex,
         audioBlob,
+        audioRecorder.getAudioExtension(),
         sperreBis,
         emotion
     );

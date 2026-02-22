@@ -28,9 +28,10 @@ const storage = multer.diskStorage({
         cb(null, uploadDir);
     },
     filename: (req, file, cb) => {
-        // Generate unique name: speakerId_questionId_timestamp.mp3
+        // Generate unique name: speakerId_questionId_timestamp.ext
         const { speakerId, questionId } = req.body;
-        cb(null, `${speakerId}_q${questionId}_${Date.now()}.mp3`);
+        const ext = file.originalname ? file.originalname.split('.').pop() : 'webm';
+        cb(null, `${speakerId}_q${questionId}_${Date.now()}.${ext}`);
     }
 });
 
