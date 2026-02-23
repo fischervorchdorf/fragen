@@ -122,7 +122,7 @@ app.post('/api/login', async (req, res) => {
     try {
         const hashed = hashPassword(password);
         const [rows] = await pool.execute('SELECT id, vorname, email_verified FROM speakers WHERE email = ? AND password = ?', [email, hashed]);
-        
+
         if (rows.length > 0) {
             const speaker = rows[0];
             return res.json({
@@ -174,12 +174,12 @@ app.post('/api/register', async (req, res) => {
 
 app.post('/api/update-profile', async (req, res) => {
     const { speakerId, vorname, nachname, geburtsdatum } = req.body;
-    if (!speakerId || !vorname || !nachname || !geburtsdatum) return res.status(400).json({error: 'Alle Felder müssen ausgefüllt sein'});
+    if (!speakerId || !vorname || !nachname || !geburtsdatum) return res.status(400).json({ error: 'Alle Felder müssen ausgefüllt sein' });
     try {
         await pool.execute('UPDATE speakers SET vorname=?, nachname=?, geburtsdatum=? WHERE id=?', [vorname, nachname, geburtsdatum, speakerId]);
-        res.json({success: true, vorname});
-    } catch(e) {
-        res.status(500).json({error: 'Fehler beim Speichern des Profils'});
+        res.json({ success: true, vorname });
+    } catch (e) {
+        res.status(500).json({ error: 'Fehler beim Speichern des Profils' });
     }
 });
 
@@ -188,12 +188,12 @@ app.post('/api/forgot-password', async (req, res) => {
     try {
         const [rows] = await pool.execute('SELECT id FROM speakers WHERE email = ?', [email]);
         if (rows.length === 0) return res.status(404).json({ error: 'E-Mail nicht gefunden.' });
-        
-        const newPassword = generateVerificationCode(); 
+
+        const newPassword = generateVerificationCode();
         const hashed = hashPassword(newPassword);
-        
+
         await pool.execute('UPDATE speakers SET password = ? WHERE email = ?', [hashed, email]);
-        
+
         if (process.env.SMTP_PASSWORD) {
             const mailOptions = {
                 from: `"Totenbilder.at" <${process.env.SMTP_USER || 'fischervorchdorf@gmx.at'}>`,
@@ -427,7 +427,7 @@ app.post('/api/invite-listener', async (req, res) => {
     try {
         const token = generateToken();
         await pool.execute('INSERT INTO listeners (speaker_id, email, token) VALUES (?, ?, ?)', [speakerId, email, token]);
-        
+
         const inviteLink = `${req.headers.origin || 'http://localhost:3000'}/?listener_token=${token}`;
         if (process.env.SMTP_PASSWORD) {
             const mailOptions = {
@@ -453,6 +453,20 @@ Das Team von Totenbilder.at`,
     }
 });
 
+// Get list of invited listeners for a speaker
+app.get('/api/listeners/:speakerId', async (req, res) => {
+    const { speakerId } = req.params;
+    try {
+        const [rows] = await pool.execute(
+            'SELECT email, created_at FROM listeners WHERE speaker_id = ? ORDER BY created_at DESC',
+            [speakerId]
+        );
+        res.json({ listeners: rows });
+    } catch (e) {
+        res.status(500).json({ error: 'Fehler beim Laden der Zuhörer.' });
+    }
+});
+
 app.get('/api/listener-auth/:token', async (req, res) => {
     const { token } = req.params;
     try {
@@ -461,7 +475,7 @@ app.get('/api/listener-auth/:token', async (req, res) => {
             [token]
         );
         if (rows.length === 0) return res.status(401).json({ error: 'Ungültiger oder abgelaufener Einladungslink.' });
-        
+
         const data = rows[0];
         res.json({ speakerId: data.speaker_id, vorname: data.vorname, isZuhoerer: true });
     } catch (e) {

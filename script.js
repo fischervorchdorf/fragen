@@ -713,11 +713,39 @@ function logoutUser() {
     showNotification('Sicher abgemeldet.');
 }
 
-function openProfileModal() {
+async function openProfileModal() {
     document.getElementById('profile-new-password').value = '';
     document.getElementById('profile-old-password').value = '';
     document.getElementById('profile-error').style.display = 'none';
+    document.getElementById('profile-success').style.display = 'none';
+    document.getElementById('profile-forgot-message').style.display = 'none';
     document.getElementById('profile-modal').style.display = 'flex';
+
+    // Eingeladene Zuhörer laden
+    const listEl = document.getElementById('listeners-list');
+    listEl.innerHTML = '<p style="text-align:center;padding:10px 0;">Wird geladen…</p>';
+    try {
+        const res = await fetch(`/api/listeners/${storageManager.speakerId}`);
+        const data = await res.json();
+        if (data.listeners && data.listeners.length > 0) {
+            listEl.innerHTML = data.listeners.map(l => {
+                const date = new Date(l.created_at).toLocaleDateString('de-DE', {
+                    day: '2-digit', month: '2-digit', year: 'numeric'
+                });
+                const time = new Date(l.created_at).toLocaleTimeString('de-DE', {
+                    hour: '2-digit', minute: '2-digit'
+                });
+                return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f0f0f0;">
+                    <span>✉️ ${l.email}</span>
+                    <span style="font-size:0.8rem;color:#9ca3af;">📅 ${date} ${time}</span>
+                </div>`;
+            }).join('');
+        } else {
+            listEl.innerHTML = '<p style="color:#9ca3af;font-size:0.85rem;padding:8px 0;">Noch niemanden eingeladen.</p>';
+        }
+    } catch (e) {
+        listEl.innerHTML = '<p style="color:red;font-size:0.85rem;">Fehler beim Laden.</p>';
+    }
 }
 
 function closeProfileModal() {
@@ -726,8 +754,12 @@ function closeProfileModal() {
 
 async function saveProfilePins() {
     const errorEl = document.getElementById('profile-error');
+    const successEl = document.getElementById('profile-success');
     const newPassword = document.getElementById('profile-new-password').value.trim();
     const oldPassword = document.getElementById('profile-old-password').value.trim();
+
+    errorEl.style.display = 'none';
+    successEl.style.display = 'none';
 
     if (!newPassword || !oldPassword) {
         errorEl.textContent = 'Bitte beide Felder ausfüllen.';
@@ -748,10 +780,48 @@ async function saveProfilePins() {
 
         const data = await res.json();
         if (res.ok) {
-            showNotification('Passwort erfolgreich aktualisiert!');
-            closeProfileModal();
+            successEl.textContent = '✓ Passwort erfolgreich geändert.';
+            successEl.style.display = 'block';
+            document.getElementById('profile-old-password').value = '';
+            document.getElementById('profile-new-password').value = '';
         } else {
             errorEl.textContent = data.error || 'Fehler beim Speichern.';
+            errorEl.style.display = 'block';
+        }
+    } catch (e) {
+        errorEl.textContent = 'Verbindungsfehler.';
+        errorEl.style.display = 'block';
+    }
+}
+
+async function profileForgotPassword() {
+    const msgEl = document.getElementById('profile-forgot-message');
+    const errorEl = document.getElementById('profile-error');
+    msgEl.style.display = 'none';
+    errorEl.style.display = 'none';
+
+    // E-Mail aus dem localStorage holen
+    const auth = JSON.parse(localStorage.getItem('speakerAuth') || '{}');
+    const email = auth.email;
+
+    if (!email) {
+        errorEl.textContent = 'Keine E-Mail-Adresse bekannt. Bitte melde dich ab und nutze "Passwort vergessen" auf der Loginseite.';
+        errorEl.style.display = 'block';
+        return;
+    }
+
+    try {
+        const res = await fetch('/api/forgot-password', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email })
+        });
+        const data = await res.json();
+        if (res.ok) {
+            msgEl.textContent = `✓ Ein neues Passwort wurde an ${email} gesendet.`;
+            msgEl.style.display = 'block';
+        } else {
+            errorEl.textContent = data.error || 'Fehler beim Zurücksetzen.';
             errorEl.style.display = 'block';
         }
     } catch (e) {

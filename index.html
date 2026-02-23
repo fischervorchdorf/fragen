@@ -159,14 +159,14 @@
                 <button id="tab-register" class="btn-secondary" onclick="switchLoginTab('register')"
                     style="flex: 1; margin: 0; padding: 12px;">Registrieren</button>
             </div>
-            
+
             <div class="intro-content" style="padding: 30px;">
                 <div style="margin-bottom: 20px;">
                     <label style="display: block; margin-bottom: 5px;">E-Mail</label>
                     <input type="email" id="auth-email" placeholder="deine@email.at"
                         style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;" required>
                 </div>
-                
+
                 <div style="margin-bottom: 20px;">
                     <label style="display: block; margin-bottom: 5px;">Passwort</label>
                     <input type="password" id="auth-password" placeholder="Passwort"
@@ -180,16 +180,19 @@
                 </div>
 
                 <div id="auth-error" style="color: red; margin-bottom: 15px; display: none;"></div>
-                
+
                 <button id="btn-auth-submit" class="btn-primary" onclick="submitAuth()"
                     style="width: 100%; margin: 0; background-color: var(--primary-color);">Anmelden</button>
 
                 <div id="forgot-password-container" style="margin-top: 15px; text-align: center;">
                     <button class="btn-text" onclick="forgotPassword()"
-                        style="font-size: 0.85rem; background: none; border: none; color: var(--text-light); text-decoration: underline; cursor: pointer;">Passwort vergessen?</button>
+                        style="font-size: 0.85rem; background: none; border: none; color: var(--text-light); text-decoration: underline; cursor: pointer;">Passwort
+                        vergessen?</button>
                 </div>
-                
-                <div id="forgot-password-message" style="color: green; margin-top: 15px; font-size: 0.85rem; display: none; text-align: center;"></div>
+
+                <div id="forgot-password-message"
+                    style="color: green; margin-top: 15px; font-size: 0.85rem; display: none; text-align: center;">
+                </div>
             </div>
         </div>
     </div>
@@ -202,7 +205,8 @@
             </div>
             <div class="modal-body">
                 <p style="font-size: 0.95rem; margin-bottom: 20px; color: var(--text-color);">
-                    Willkommen! Bitte verrate uns deinen Namen und dein Geburtsdatum, damit wir deine Geschichten richtig zuordnen können.
+                    Willkommen! Bitte verrate uns deinen Namen und dein Geburtsdatum, damit wir deine Geschichten
+                    richtig zuordnen können.
                 </p>
                 <div style="margin-bottom: 15px;">
                     <label style="display: block; margin-bottom: 5px;">Vorname</label>
@@ -219,12 +223,71 @@
                     <input type="date" id="onboarding-geburtsdatum"
                         style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;" required>
                 </div>
-                <p id="onboarding-error" style="color: red; display: none; margin-bottom: 15px; font-size: 0.85rem;"></p>
-                <button class="btn-primary" onclick="submitOnboarding()" style="width: 100%; margin: 0;">Speichern</button>
+                <p id="onboarding-error" style="color: red; display: none; margin-bottom: 15px; font-size: 0.85rem;">
+                </p>
+                <button class="btn-primary" onclick="submitOnboarding()"
+                    style="width: 100%; margin: 0;">Speichern</button>
             </div>
         </div>
     </div>
-    
+
+    <!-- Profil & Passwort Modal -->
+    <div id="profile-modal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 480px;">
+            <div class="modal-header">
+                <h3>⚙️ Mein Konto</h3>
+                <button class="btn-close" onclick="closeProfileModal()">×</button>
+            </div>
+            <div class="modal-body">
+
+                <!-- Passwort ändern -->
+                <div style="margin-bottom: 30px;">
+                    <h4
+                        style="margin: 0 0 12px 0; color: var(--primary-color); font-size: 1rem; border-bottom: 1px solid #e5e7eb; padding-bottom: 8px;">
+                        🔒 Passwort ändern</h4>
+                    <div style="margin-bottom: 12px;">
+                        <label
+                            style="display: block; margin-bottom: 5px; font-size: 0.85rem; color: var(--text-light);">Aktuelles
+                            Passwort</label>
+                        <input type="password" id="profile-old-password" placeholder="Dein aktuelles Passwort"
+                            style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 0.95rem; box-sizing: border-box;">
+                    </div>
+                    <div style="margin-bottom: 12px;">
+                        <label
+                            style="display: block; margin-bottom: 5px; font-size: 0.85rem; color: var(--text-light);">Neues
+                            Passwort</label>
+                        <input type="password" id="profile-new-password" placeholder="Neues Passwort"
+                            style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 0.95rem; box-sizing: border-box;">
+                    </div>
+
+                    <p id="profile-error" style="color: red; display: none; margin-bottom: 10px; font-size: 0.85rem;">
+                    </p>
+                    <p id="profile-success"
+                        style="color: green; display: none; margin-bottom: 10px; font-size: 0.85rem;"></p>
+
+                    <button class="btn-primary" onclick="saveProfilePins()"
+                        style="width: 100%; margin: 0 0 10px 0;">Passwort speichern</button>
+                    <button onclick="profileForgotPassword()"
+                        style="background: none; border: none; color: var(--text-light); text-decoration: underline; cursor: pointer; font-size: 0.85rem; padding: 0;">Passwort
+                        vergessen?</button>
+                    <p id="profile-forgot-message"
+                        style="color: green; font-size: 0.85rem; margin-top: 8px; display: none;"></p>
+                </div>
+
+                <!-- Eingeladene Zuhörer -->
+                <div>
+                    <h4
+                        style="margin: 0 0 12px 0; color: var(--primary-color); font-size: 1rem; border-bottom: 1px solid #e5e7eb; padding-bottom: 8px;">
+                        💌 Eingeladene Zuhörer</h4>
+                    <div id="listeners-list" style="font-size: 0.9rem; color: var(--text-light);">
+                        <p style="text-align: center; padding: 10px 0;">Wird geladen…</p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
     <!-- Hörer einladen Modal -->
     <div id="invite-listener-modal" class="modal" style="display: none;">
         <div class="modal-content" style="max-width: 400px;">
@@ -242,14 +305,16 @@
                         style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;" required>
                 </div>
                 <p id="invite-error" style="color: red; display: none; margin-bottom: 15px; font-size: 0.85rem;"></p>
-                <p id="invite-success" style="color: green; display: none; margin-bottom: 15px; font-size: 0.85rem;"></p>
-                
-                <button class="btn-primary" onclick="sendInvite()" style="width: 100%; margin: 0;">Einladung senden</button>
+                <p id="invite-success" style="color: green; display: none; margin-bottom: 15px; font-size: 0.85rem;">
+                </p>
+
+                <button class="btn-primary" onclick="sendInvite()" style="width: 100%; margin: 0;">Einladung
+                    senden</button>
             </div>
         </div>
     </div>
 
-    
+
     <!-- Kategorien-Übersicht -->
     <div id="categories-page" class="page" style="display: none;">
         <div class="header">
@@ -393,40 +458,7 @@
         </div>
     </div>
 
-    <!-- Profil & Passwort Modal -->
-    <div id="profile-modal" class="modal" style="display: none;">
-        <div class="modal-content" style="max-width: 450px;">
-            <div class="modal-header">
-                <h3>Sicherheitseinstellungen</h3>
-                <button class="btn-close" onclick="closeProfileModal()">×</button>
-            </div>
-            <div class="modal-body">
-                <p style="font-size: 0.9rem; color: var(--text-light); margin-bottom: 20px;">Hier kannst du neue Passwort
-                    für dich oder deine Angehörigen setzen. Lass das Feld leer, wenn du den Passwort nicht ändern möchtest.
-                </p>
 
-                <div style="margin-bottom: 25px;">
-                    <label
-                        style="display: block; margin-bottom: 5px; font-weight: bold; color: var(--primary-color);">Dein
-                        Erzähler-Passwort</label>
-                    <input type="password" id="profile-new-password" placeholder="Neues Passwort setzen"
-                        style="width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 1rem;">
-
-                    <label
-                        style="display: block; margin-bottom: 5px; font-weight: bold; color: var(--primary-color); margin-top: 15px;">Der
-                        Zuhörer-Passwort für Angehörige</label>
-                    <input type="password" id="profile-old-password" placeholder="Altes Passwort"
-                        style="width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 1rem;">
-                </div>
-
-                <p id="profile-error"
-                    style="color: red; display: none; margin-bottom: 15px; font-size: 0.85rem; text-align: center;"></p>
-
-                <button class="btn-primary" onclick="saveProfilePins()" style="width: 100%; margin: 0 0 15px 0;">Passwort
-                    speichern</button>
-            </div>
-        </div>
-    </div>
 
     <script src="script.js?v=3"></script>
 </body>
