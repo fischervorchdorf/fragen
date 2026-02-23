@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Erinnerungen für die Zukunft</title>
-    <link rel="stylesheet" href="style.css?v=3">
+    <link rel="stylesheet" href="style.css?v=4">
     <script src="https://cdn.jsdelivr.net/npm/lamejs@1.2.1/lame.min.js"></script>
 </head>
 
@@ -318,11 +318,9 @@
     <!-- Kategorien-Übersicht -->
     <div id="categories-page" class="page" style="display: none;">
         <div class="header">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
-                <div style="margin: 0;">
-                    <div class="logo-small" style="margin: 0; text-align: left; opacity: 0.8;">totenbilder.at</div>
-                </div>
-                <div id="profil-btn-container" style="display: flex; gap: 10px;">
+            <div class="categories-top-bar">
+                <div class="logo-small">totenbilder.at</div>
+                <div id="profil-btn-container" class="profil-btn-container">
                     <button class="btn-secondary" onclick="openProfileModal()"
                         style="padding: 6px 15px; font-size: 0.85rem; border: none; background: #e2e8f0; color: var(--primary-color);">⚙️
                         Passwort ändern</button>
@@ -458,7 +456,7 @@
 
 
 
-    <script src="script.js?v=5"></script>
+    <script src="script.js?v=6"></script>
 </body>
 
 </html>
