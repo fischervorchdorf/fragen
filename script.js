@@ -367,8 +367,33 @@ class StorageManager {
         return [];
     }
 
-    deleteRecording(categoryId, questionIndex) {
-        alert("Das Löschen von Aufnahmen ist auf dem Server zurzeit deaktiviert, um Versehentliches zu vermeiden.");
+    async deleteRecordingById(recordId) {
+        if (!this.speakerId) {
+            alert('Nicht angemeldet!');
+            return false;
+        }
+
+        try {
+            const res = await fetch(`/api/answers/${recordId}`, {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ speakerId: this.speakerId })
+            });
+
+            if (!res.ok) {
+                const data = await res.json();
+                console.error("Fehler beim Löschen:", data.error);
+                alert("Löschen fehlgeschlagen: " + (data.error || "Unbekannter Fehler"));
+                return false;
+            }
+
+            await this.loadData();
+            return true;
+        } catch (error) {
+            console.error('Fehler beim Löschen:', error);
+            alert('Fehler beim Löschen der Aufnahme!');
+            return false;
+        }
     }
 
     hasRecording(categoryId, questionIndex) {
@@ -400,6 +425,10 @@ function initApp() {
 function startApp() {
     document.getElementById('intro-page').style.display = 'none';
     document.getElementById('login-page').style.display = 'block';
+    setTimeout(() => {
+        const input = document.getElementById('login-vorname');
+        if (input) input.focus();
+    }, 100);
 }
 
 function setLoginRole(role) {
@@ -809,6 +838,7 @@ function renderQuestions() {
                             <button class="btn-download" style="margin-top: 5px;" onclick="downloadRecording('${currentCategory.id}', ${index}, ${recIndex})">
                                 ⬇️ MP3 Herunterladen
                             </button>
+                            ${!isZuhoererGlobal ? `<button class="btn-secondary" style="margin-top: 5px; background: #fee2e2; color: #b91c1c; border: none; margin-left: 10px;" onclick="deleteRecording(${rec.id})">🗑️ Löschen</button>` : ''}
                         </div>
                     `;
                 }
@@ -946,12 +976,16 @@ async function saveRecording() {
     showNotification('✓ Aufnahme gespeichert!');
 }
 
-function deleteRecording(categoryId, questionIndex) {
-    if (confirm('Möchtest du diese Aufnahme wirklich löschen?')) {
-        storageManager.deleteRecording(categoryId, questionIndex);
-        renderQuestions();
-        renderCategories();
-        showNotification('Aufnahme gelöscht');
+async function deleteRecording(recordId) {
+    if (confirm('Möchtest du diese Aufnahme wirklich endgültig löschen? Diese Aktion kann nicht rückgängig gemacht werden.')) {
+        const success = await storageManager.deleteRecordingById(recordId);
+        if (success) {
+            if (currentCategory) {
+                renderQuestions();
+            }
+            renderCategories();
+            showNotification('Aufnahme erfolgreich gelöscht');
+        }
     }
 }
 

@@ -6,7 +6,7 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const nodemailer = require('nodemailer');
-const { S3Client, PutObjectCommand, GetObjectCommand } = require('@aws-sdk/client-s3');
+const { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand } = require('@aws-sdk/client-s3');
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 
 const app = express();
@@ -373,6 +373,52 @@ app.post('/api/answers', upload.single('audio'), async (req, res) => {
     } catch (error) {
         console.error('Upload Error:', error);
         res.status(500).json({ error: 'Fehler beim Speichern der Antwort in der Datenbank.' });
+    }
+});
+
+// DELETE: Antwort löschen
+app.delete('/api/answers/:id', async (req, res) => {
+    const { id } = req.params;
+    const { speakerId } = req.body;
+
+    if (!speakerId) return res.status(401).json({ error: 'Nicht autorisiert.' });
+
+    try {
+        // DB-Eintrag prüfen (und Pfad auslesen, um Datei zu löschen)
+        const [rows] = await pool.execute('SELECT file_path FROM answers WHERE id = ? AND speaker_id = ?', [id, speakerId]);
+
+        if (rows.length === 0) {
+            return res.status(404).json({ error: 'Aufnahme nicht gefunden oder ungültige Berechtigung.' });
+        }
+
+        const filePath = rows[0].file_path;
+
+        // Wenn die Datei auf Cloudflare R2 liegt, von dort löschen
+        if (filePath && filePath.startsWith('r2://')) {
+            const fileName = filePath.replace('r2://', '');
+            try {
+                await s3.send(new DeleteObjectCommand({
+                    Bucket: process.env.R2_BUCKET_NAME,
+                    Key: fileName
+                }));
+            } catch (r2Err) {
+                console.error("Fehler beim Löschen aus R2 (fährt trotzdem mit DB-Löschung fort):", r2Err);
+            }
+        } else if (filePath) {
+            // Sonst löschen alter lokaler Dateien
+            const localPath = path.join(__dirname, filePath);
+            if (fs.existsSync(localPath)) {
+                fs.unlinkSync(localPath);
+            }
+        }
+
+        // Aus der Datenbank löschen
+        await pool.execute('DELETE FROM answers WHERE id = ? AND speaker_id = ?', [id, speakerId]);
+
+        res.json({ success: true, message: 'Aufnahme erfolgreich gelöscht.' });
+    } catch (error) {
+        console.error('Delete Error:', error);
+        res.status(500).json({ error: 'Fehler beim Löschen der Antwort.' });
     }
 });
 
