@@ -6,6 +6,8 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const nodemailer = require('nodemailer');
+const { S3Client, PutObjectCommand, GetObjectCommand } = require('@aws-sdk/client-s3');
+const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -15,6 +17,16 @@ app.use(cors());
 app.use(express.json());
 // Serve static frontend files from current directory
 app.use(express.static(__dirname));
+
+// R2 Configuration
+const s3 = new S3Client({
+    region: 'auto',
+    endpoint: `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+    credentials: {
+        accessKeyId: process.env.R2_ACCESS_KEY_ID,
+        secretAccessKey: process.env.R2_SECRET_ACCESS_KEY,
+    },
+});
 
 // Multer Storage Configuration
 // Erstellt den Ordner, falls er nicht existiert
@@ -271,7 +283,7 @@ app.get('/api/answers/:speakerId', async (req, res) => {
         const now = new Date();
         now.setHours(0, 0, 0, 0); // Nur Datum vergleichen
 
-        rows.forEach(r => {
+        for (const r of rows) {
             if (!answeredQuestionsMap[r.question_id]) {
                 answeredQuestionsMap[r.question_id] = [];
             }
@@ -294,8 +306,24 @@ app.get('/api/answers/:speakerId', async (req, res) => {
                 }
             }
 
+            // Falls nicht gesperrt und R2 URL
+            if (responseData.file_path && responseData.file_path.startsWith('r2://')) {
+                const fileName = responseData.file_path.replace('r2://', '');
+                try {
+                    const command = new GetObjectCommand({
+                        Bucket: process.env.R2_BUCKET_NAME,
+                        Key: fileName
+                    });
+                    // Generiere URL (1 Stunde gültig)
+                    responseData.file_path = await getSignedUrl(s3, command, { expiresIn: 3600 });
+                } catch (e) {
+                    console.error('Presigned URL Error:', e);
+                    responseData.file_path = null;
+                }
+            }
+
             answeredQuestionsMap[r.question_id].push(responseData);
-        });
+        }
         res.json({ answeredQuestions: answeredQuestionsMap });
     } catch (error) {
         console.error('Fetch Answers Error:', error);
@@ -313,7 +341,21 @@ app.post('/api/answers', upload.single('audio'), async (req, res) => {
     }
 
     try {
-        const filePath = `/uploads/${file.filename}`;
+        const fileContent = fs.readFileSync(file.path);
+        const fileName = file.filename;
+
+        // Upload to Cloudflare R2
+        await s3.send(new PutObjectCommand({
+            Bucket: process.env.R2_BUCKET_NAME,
+            Key: fileName,
+            Body: fileContent,
+            ContentType: file.mimetype
+        }));
+
+        // Delete local file
+        fs.unlinkSync(file.path);
+
+        const filePath = `r2://${fileName}`;
 
         // sorge dafür, dass leere sperreBis strings als NULL in der DB landen
         const sperreBisValue = sperreBis && sperreBis.trim() !== '' ? sperreBis : null;
