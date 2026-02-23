@@ -476,6 +476,17 @@ async function loginUser() {
 
         storageManager.setSpeaker(data.speakerId);
         isZuhoererGlobal = data.isZuhoerer;
+
+        // Save to localStorage for persistent login
+        localStorage.setItem('speakerAuth', JSON.stringify({
+            speakerId: data.speakerId,
+            isZuhoerer: data.isZuhoerer,
+            vorname: vorname,
+            role: currentLoginRole,
+            email: data.email || null,
+            emailVerified: data.emailVerified
+        }));
+
         await storageManager.loadData();
 
         showNotification(data.message || "Erfolgreich eingeloggt.");
@@ -515,6 +526,7 @@ function showCategoriesPage(vorname) {
 
 function logoutUser() {
     storageManager.setSpeaker(null);
+    localStorage.removeItem('speakerAuth'); // Clear the saved session
     document.getElementById('categories-page').style.display = 'none';
     document.getElementById('questions-page').style.display = 'none';
     document.getElementById('profile-modal').style.display = 'none';
@@ -1088,4 +1100,36 @@ function showNotification(message) {
    INITIALIZATION
    ============================================ */
 
-document.addEventListener('DOMContentLoaded', initApp);
+async function tryAutoLogin() {
+    const savedAuthInfo = localStorage.getItem('speakerAuth');
+    if (savedAuthInfo) {
+        try {
+            const auth = JSON.parse(savedAuthInfo);
+            if (auth && auth.speakerId) {
+                // Restore state
+                storageManager.setSpeaker(auth.speakerId);
+                isZuhoererGlobal = auth.isZuhoerer;
+                currentLoginRole = auth.role || (isZuhoererGlobal ? 'zuhoerer' : 'erzaehler');
+
+                await storageManager.loadData();
+
+                document.getElementById('intro-page').style.display = 'none';
+
+                if (auth.email && auth.emailVerified === false) {
+                    document.getElementById('verify-email-display').textContent = auth.email;
+                    document.getElementById('email-verify-modal').style.display = 'flex';
+                } else {
+                    showCategoriesPage(auth.vorname || 'Speaker');
+                }
+            }
+        } catch (e) {
+            console.error('Auto-login failed', e);
+            localStorage.removeItem('speakerAuth');
+        }
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    initApp();
+    tryAutoLogin();
+});
