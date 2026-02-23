@@ -1,5 +1,7 @@
 /* ============================================
-   KATEGORIEN UND FRAGEN DATEN - 95 FRAGEN
+   KATEGORIEN UND FRAGEN DATEN - 70 FRAGEN
+   Optimiert für ältere Menschen
+   Fokus: Emotionale Tiefe statt Chronologie
    ============================================ */
 
 const CATEGORIES = [
@@ -10,15 +12,14 @@ const CATEGORIES = [
         description: 'Wo kommst du her? Wie begann dein Leben? Die Kindheit formt uns mehr, als wir oft ahnen.',
         questions: [
             'Wo bist du geboren und aufgewachsen? Beschreibe dein Elternhaus – nicht nur das Gebäude, sondern wie es sich anfühlte.',
-            'Wie viele Geschwister hattest du? Was war deine Rolle unter ihnen – der Beschützer, der Träumer, der Rebell?',
-            'Beschreibe deine Eltern als Menschen. Was hast du an ihnen geliebt? Was hat dich an ihnen verletzt?',
+            'Wie viele Geschwister hattest du? Was war deine Rolle unter ihnen?',
+            'Beschreibe deine Eltern als Menschen. Was hast du an ihnen besonders geschätzt?',
             'Was war dein Lieblingsspiel als Kind? Mit wem hast du es gespielt?',
             'Hattest du einen besten Freund oder eine beste Freundin in der Kindheit? Was ist aus dieser Freundschaft geworden?',
             'Gab es einen Erwachsenen außerhalb deiner Familie, der an dich geglaubt hat? Was hat das mit dir gemacht?',
             'Was wolltest du als Kind werden? Was hat dich daran fasziniert?',
             'Gab es einen Ort aus deiner Kindheit, der dir heilig war? Einen Rückzugsort, einen geheimen Platz?',
-            'Welches Ereignis aus deiner Kindheit hat dich am meisten geprägt – im Guten oder im Schweren?',
-            'Wann hast du als Kind zum ersten Mal echte Angst gespürt? Was ist passiert?',
+            'Welches Ereignis aus deiner Kindheit hat dich am meisten geprägt?',
         ]
     },
     {
@@ -28,31 +29,31 @@ const CATEGORIES = [
         description: 'Die Menschen, die dein Herz berührt haben. Liebe in all ihren Formen – die leichte und die schwere.',
         questions: [
             'Wer war deine erste große Liebe? Wie hast du dich gefühlt, wenn du an sie oder ihn gedacht hast?',
-            'Wie hast du deinen Lebenspartner kennengelernt? Erzähle die ganze Geschichte.',
+            'Wie hast du deinen Lebenspartner oder deine Lebenspartnerin kennengelernt? Erzähle die ganze Geschichte.',
             'Wann hast du gewusst: Das ist der oder die Richtige? Gab es einen bestimmten Moment?',
             'Beschreibe eure Hochzeit – oder warum ihr euch entschieden habt, nicht zu heiraten.',
-            'Gab es einen Moment, in dem du wusstest: Dieser Mensch sieht mich wirklich, so wie ich bin?',
+            'Wann hast du gespürt, dass dein Partner oder deine Partnerin dich wirklich versteht?',
             'Was war der schwerste Moment in eurer Beziehung? Wie habt ihr ihn überstanden?',
             'Welches war euer Lieblingslied oder euer besonderer Ort? Warum gerade dieser?',
             'Was vermisst du am meisten, wenn du an eure gemeinsame Zeit denkst?',
             'Gab es eine Freundschaft, die so tief war wie Familie? Erzähle von diesem Menschen.',
-            'Was würdest du heute deinem jüngeren Ich über die Liebe sagen?',
+            'Was hast du über die Liebe gelernt, das du früher nicht wusstest?',
         ]
     },
     {
         id: 'family-children',
         name: 'Familie & Kinder',
-        icon: '👨‍👩‍👧‍👦',
+        icon: '👨👩👧👦',
         description: 'Die nächste Generation. Was es bedeutet, Verantwortung für ein anderes Leben zu tragen.',
         questions: [
             'Wolltest du immer Kinder haben? Oder kam es anders als geplant?',
             'Beschreibe den Moment, als du zum ersten Mal Mutter oder Vater wurdest. Was hast du gefühlt?',
-            'Was hat dich an der Erziehung am meisten überrascht? Was war anders, als du es dir vorgestellt hattest?',
+            'Was hat dich an der Erziehung am meisten überrascht?',
             'Welche Werte wolltest du deinen Kindern unbedingt mitgeben? Ist es dir gelungen?',
             'Gab es einen Moment, in dem dein Kind dir etwas beigebracht hat – ohne es zu wissen?',
             'Was war der stolzeste Moment, den du als Elternteil erlebt hast?',
             'Wenn du Großeltern bist: Was ist das Schönste daran? Was ist anders als beim eigenen Kind?',
-            'Was hast du deinen Kindern nie gesagt, obwohl du es wolltest?',
+            'Gibt es etwas, das du deinen Kindern oder Enkeln gerne noch sagen möchtest?',
         ]
     },
     {
@@ -61,14 +62,14 @@ const CATEGORIES = [
         icon: '💼',
         description: 'Was du geschaffen hast. Die Arbeit deiner Hände und deines Geistes.',
         questions: [
-            'Musstest du einen Traum aufgeben, um praktisch zu sein? Welchen? Trauerst du ihm nach?',
-            'Wann hast du zum ersten Mal gespürt: Das kann ich. Das bin ich.',
-            'Was an deiner Arbeit hat dir Sinn gegeben – und was hat dir Kraft geraubt?',
-            'Gab es einen Kollegen oder Mentor, der dich besonders geprägt hat? Was hast du von ihm gelernt?',
+            'Gab es einen Traum, den du nicht verwirklichen konntest? Wie gehst du heute damit um?',
+            'Wann hast du gemerkt, dass dir deine Arbeit gut von der Hand geht?',
+            'Was an deiner Arbeit hat dir Sinn gegeben?',
+            'Gab es einen Kollegen oder Mentor, der dich besonders geprägt hat? Was hast du von ihm oder ihr gelernt?',
             'Was war dein größter beruflicher Erfolg? Was bedeutete er dir wirklich?',
-            'Wie hast du Beruf und Familie unter einen Hut gebracht? Was hast du dafür geopfert?',
+            'Wie hast du Beruf und Familie unter einen Hut gebracht?',
             'Wenn du nochmal von vorne anfangen könntest – welchen Beruf würdest du wählen? Warum?',
-            'Was hast du vermisst, als du aufgehört hast zu arbeiten? Was hat dich überrascht?',
+            'Was hast du vermisst, als du aufgehört hast zu arbeiten?',
         ]
     },
     {
@@ -82,9 +83,8 @@ const CATEGORIES = [
             'Wie hast du Weihnachten oder andere wichtige Feste gefeiert? Welche Tradition war dir am wichtigsten?',
             'Gab es ein Rezept oder Gericht, das nur du so kochen konntest? Von wem hast du es gelernt?',
             'Hattest du einen Garten? Was war deine Lieblingspflanze? Warum gerade diese?',
-            'Wie habt ihr als Familie gegessen? Gab es Regeln, Rituale, einen festen Platz für jeden?',
+            'Wie habt ihr als Familie gegessen? Gab es Rituale oder einen festen Platz für jeden?',
             'Welche Angewohnheit hattest du, die andere lustig oder eigenartig fanden?',
-            'Worüber hast du nachts manchmal nachgedacht, wenn du nicht schlafen konntest?',
             'Gab es Familientraditionen, die dir besonders wichtig waren? Welche hast du weitergegeben?',
             'Was waren die kleinen, unscheinbaren Momente, die deinen Alltag schön gemacht haben?',
         ]
@@ -97,12 +97,12 @@ const CATEGORIES = [
         questions: [
             'Was war dein liebstes Hobby? Wie bist du dazu gekommen? Was hat es dir bedeutet?',
             'Welche Musik hast du geliebt? Gab es ein Lied, das dein Lied war?',
-            'Welches Buch oder welcher Film hat dich am tiefsten berührt? Warum gerade dieses?',
-            'Beschreibe die schönste Reise deines Lebens. Nicht nur, was du gesehen hast – sondern wie du dich gefühlt hast.',
+            'Welches Buch oder welcher Film hat dich am tiefsten berührt? Warum?',
+            'Beschreibe die schönste Reise deines Lebens – nicht nur, was du gesehen hast, sondern wie du dich gefühlt hast.',
             'Gab es einen Sport oder eine Aktivität, bei der du dich richtig lebendig gefühlt hast?',
             'Warst du Mitglied in einem Verein oder einer Gemeinschaft? Was hat dir das gegeben?',
             'Hattest du ein Talent oder eine Fertigkeit, auf die du stolz warst?',
-            'Wann hast du dich das letzte Mal wie ein Kind gefreut – ohne Grund, einfach so?',
+            'Wann hast du dich das letzte Mal wie ein Kind gefreut?',
             'Was war das beste Geschenk, das du je bekommen hast – und warum war es so besonders?',
             'Was hat dich zum Lachen gebracht? Wer konnte dich aufheitern, wenn dir nicht danach war?',
         ]
@@ -114,17 +114,14 @@ const CATEGORIES = [
         description: 'Die Momente, die dich gefordert haben – und gezeigt haben, wer du wirklich bist.',
         questions: [
             'Was war die größte Herausforderung deines Lebens? Wie hast du sie gemeistert?',
-            'Hast du Krieg, Flucht oder schwere wirtschaftliche Zeiten erlebt? Wie haben sie dich verändert?',
+            'Welche schwierigen Zeiten hast du durchgemacht? Wie haben sie dich verändert?',
             'Welcher Verlust hat dich am meisten getroffen? Wie bist du mit der Trauer umgegangen?',
-            'Gab es einen Moment, in dem du dachtest, du kannst nicht mehr weitermachen? Was hat dich gehalten?',
             'Wer oder was hat dir in den schwersten Zeiten Kraft gegeben?',
             'Was hast du aus den schwierigsten Zeiten gelernt, das du sonst nie gelernt hättest?',
             'Gibt es etwas, das du bereust – oder das du heute anders machen würdest?',
-            'Wem hast du vergeben, obwohl es schwer war? Wer hat dir vergeben?',
-            'Wann hast du dich am einsamsten gefühlt in deinem Leben?',
-            'Wie hast du gelernt, mit Abschied umzugehen?',
+            'Wem hast du vergeben, obwohl es schwer war?',
+            'Gab es Zeiten, in denen du dich einsam gefühlt hast? Was hat dir dann geholfen?',
             'Was ist das Mutigste, das du je getan hast – nicht körperlich, sondern emotional?',
-            'Wann hast du geweint vor Glück? Wann vor Trauer?',
         ]
     },
     {
@@ -141,9 +138,8 @@ const CATEGORIES = [
             'Worauf bist du in deinem Leben am meisten stolz?',
             'Was möchtest du, dass man sich über dich erinnert?',
             'Wenn du noch einen Wunsch frei hättest – welcher wäre das?',
-            'Gibt es Worte, die du jemandem noch sagen möchtest, bevor es zu spät ist?',
-            'Was an dir verstehen die meisten Menschen nicht?',
-            'Wenn du einen Brief an dich selbst mit 20 schreiben könntest – was würdest du sagen?',
+            'Gibt es Worte, die du jemandem noch sagen möchtest?',
+            'Was würdest du deinem 20-jährigen Ich raten?',
         ]
     },
     {
@@ -173,7 +169,7 @@ const CATEGORIES = [
             'Gibt es einen Ort, der nicht mehr existiert, den du aber immer noch in dir trägst?',
             'Was war früher wirklich besser? Was ist heute besser?',
             'Welches historische Ereignis hat dich am meisten bewegt oder beunruhigt?',
-            'Was durftest du nicht sein oder tun, weil es sich nicht gehörte? Wie hast du dich dabei gefühlt?',
+            'Gab es Dinge, die damals nicht erlaubt oder üblich waren, die du gerne getan hättest?',
             'Was würdest du den Menschen in 50 oder 100 Jahren gerne erzählen?',
             'Was möchtest du noch erleben oder erreichen?',
         ]
