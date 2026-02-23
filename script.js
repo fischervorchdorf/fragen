@@ -201,43 +201,18 @@ class AudioRecorder {
             });
 
             // Fix für Samsung/Android "Micky Maus/Donald Duck" Stimme
-            // Erzwingt einen korrekten Codec und verhindert Sample-Rate-Fehler
-            const mimeTypes = [
-                'audio/webm;codecs=opus',
-                'audio/webm',
-                'audio/mp4',
-                'audio/ogg;codecs=opus'
-            ];
+            // Wir verwenden RecordRTC, um die Aufnahmen zuverlässiger zu verarbeiten
+            this.mediaRecorder = new RecordRTC(stream, {
+                type: 'audio',
+                mimeType: 'audio/webm',
+                recorderType: RecordRTC.StereoAudioRecorder, // Erzwingt Standard Stereo Audio Recorder für Web-Konsistenz
+                desiredSampRate: 44100, // Verhindert Pitch-Shifting Probleme (Donald Duck) auf manchen Androids
+            });
 
-            let options = {};
-            for (const mimeType of mimeTypes) {
-                if (MediaRecorder.isTypeSupported(mimeType)) {
-                    options.mimeType = mimeType;
-                    break;
-                }
-            }
-
-            this.mediaRecorder = new MediaRecorder(stream, options);
-            this.audioChunks = [];
             this.recordingStartTime = Date.now();
             this.isRecording = true;
 
-            this.mediaRecorder.ondataavailable = (event) => {
-                this.audioChunks.push(event.data);
-            };
-
-            this.mediaRecorder.onstop = () => {
-                const mimeType = this.mediaRecorder.mimeType || 'audio/webm';
-                let ext = 'webm';
-                if (mimeType.includes('mp4') || mimeType.includes('m4a')) ext = 'm4a';
-                if (mimeType.includes('ogg')) ext = 'ogg';
-
-                this.audioBlob = new Blob(this.audioChunks, { type: mimeType });
-                this.audioExtension = ext;
-                this.isRecording = false;
-            };
-
-            this.mediaRecorder.start();
+            this.mediaRecorder.startRecording();
             this.startTimer();
         } catch (error) {
             console.error('Fehler beim Starten der Aufnahme:', error);
@@ -247,9 +222,18 @@ class AudioRecorder {
 
     stop() {
         if (this.mediaRecorder && this.isRecording) {
-            this.mediaRecorder.stop();
-            this.mediaRecorder.stream.getTracks().forEach(track => track.stop());
-            this.stopTimer();
+            this.isRecording = false;
+            this.mediaRecorder.stopRecording(() => {
+                this.audioBlob = this.mediaRecorder.getBlob();
+                this.audioExtension = 'webm'; // StereoAudioRecorder macht standardmäßig webm
+                this.stopTimer();
+
+                // Stop the tracks to release microphone
+                const stream = this.mediaRecorder.camera || this.mediaRecorder.stream;
+                if (stream) {
+                    stream.getTracks().forEach(track => track.stop());
+                }
+            });
         }
     }
 
