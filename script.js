@@ -43,7 +43,7 @@ const CATEGORIES = [
     {
         id: 'family-children',
         name: 'Familie & Kinder',
-        icon: '👨👩👧👦',
+        icon: '👨👩<br>👧👦',
         description: 'Die nächste Generation. Was es bedeutet, Verantwortung für ein anderes Leben zu tragen.',
         questions: [
             'Wolltest du immer Kinder haben? Oder kam es anders als geplant?',
