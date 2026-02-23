@@ -1211,35 +1211,15 @@ function downloadRecording(categoryId, questionIndex, recordIndex = 0) {
     const fileNameBase = `Frage ${globalQuestionNumber} - ${dateString}`;
 
     if (recording.isRemote) {
-        // Backend URL (die in `recording.data` ist ein lokaler filePath wie `/uploads/...`)
-        const url = recording.data;
-        const fileExt = url.includes('.') ? url.split('.').pop() : 'webm';
-        const finalFileName = `${fileNameBase}.${fileExt}`;
-
-        // Force download via fetch to prevent browser from just opening a player
-        fetch(url)
-            .then(res => res.blob())
-            .then(blob => {
-                const blobUrl = URL.createObjectURL(blob);
-                const link = document.createElement('a');
-                link.href = blobUrl;
-                link.download = finalFileName;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                URL.revokeObjectURL(blobUrl);
-                showNotification(`✓ Download gestartet!`);
-            })
-            .catch(err => {
-                console.error("Fehler beim Download:", err);
-                const link = document.createElement('a');
-                link.href = url;
-                link.download = finalFileName;
-                link.target = '_blank';
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-            });
+        // Proxy-Download über das Backend – umgeht CORS von R2
+        const proxyUrl = `/api/download/${recording.id}?speakerId=${storageManager.speakerId}`;
+        const link = document.createElement('a');
+        link.href = proxyUrl;
+        link.download = fileNameBase; // Browser verwendet den vom Server gesetzten Dateinamen
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        showNotification('✓ Download gestartet!');
         return;
     }
 

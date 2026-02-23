@@ -9,6 +9,7 @@ const fs = require('fs');
 const nodemailer = require('nodemailer');
 const { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand } = require('@aws-sdk/client-s3');
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
+const { Readable } = require('stream');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -311,6 +312,50 @@ app.get('/api/answers/:speakerId', async (req, res) => {
     }
 });
 
+// Download-Proxy: Streamt eine Datei aus R2 direkt zum Browser (umgeht CORS)
+app.get('/api/download/:answerId', async (req, res) => {
+    const { answerId } = req.params;
+    const { speakerId } = req.query;
+
+    if (!speakerId) return res.status(401).json({ error: 'Nicht autorisiert.' });
+
+    try {
+        const [rows] = await pool.execute(
+            'SELECT file_path FROM answers WHERE id = ? AND speaker_id = ?',
+            [answerId, speakerId]
+        );
+        if (rows.length === 0) return res.status(404).json({ error: 'Nicht gefunden.' });
+
+        const filePath = rows[0].file_path;
+        if (!filePath || !filePath.startsWith('r2://')) {
+            return res.status(404).json({ error: 'Keine R2-Datei.' });
+        }
+
+        const fileName = filePath.replace('r2://', '');
+        const ext = fileName.split('.').pop() || 'webm';
+        const downloadName = `aufnahme_${answerId}.${ext}`;
+
+        const command = new GetObjectCommand({
+            Bucket: process.env.R2_BUCKET_NAME,
+            Key: fileName
+        });
+        const r2Response = await s3.send(command);
+
+        res.setHeader('Content-Disposition', `attachment; filename="${downloadName}"`);
+        res.setHeader('Content-Type', r2Response.ContentType || 'audio/webm');
+        if (r2Response.ContentLength) {
+            res.setHeader('Content-Length', r2Response.ContentLength);
+        }
+
+        // Stream direkt durch
+        const nodeStream = Readable.from(r2Response.Body);
+        nodeStream.pipe(res);
+    } catch (e) {
+        console.error('Download Proxy Error:', e);
+        res.status(500).json({ error: 'Fehler beim Download.' });
+    }
+});
+
 // 3. Audio Upload speichern
 app.post('/api/answers', upload.single('audio'), async (req, res) => {
     const { speakerId, questionId, sperreBis, emotion } = req.body;
@@ -426,30 +471,31 @@ app.post('/api/invite-listener', async (req, res) => {
 
     try {
         const token = generateToken();
+        // Zuerst DB-Eintrag – unabhängig vom Mail-Versand
         await pool.execute('INSERT INTO listeners (speaker_id, email, token) VALUES (?, ?, ?)', [speakerId, email, token]);
 
-        const inviteLink = `${req.headers.origin || 'http://localhost:3000'}/?listener_token=${token}`;
+        const inviteLink = `${req.headers.origin || 'https://90fragen.fischervorchdorf.at'}/?listener_token=${token}`;
+
+        // E-Mail senden – Fehler hier beendet nicht den Request
         if (process.env.SMTP_PASSWORD) {
-            const mailOptions = {
-                from: `"Totenbilder.at" <${process.env.SMTP_USER || 'fischervorchdorf@gmx.at'}>`,
-                to: email,
-                subject: 'Du wurdest eingeladen, einer Lebensgeschichte zuzuhören',
-                text: `Hallo,
-
-du wurdest eingeladen, dir Aufnahmen auf Totenbilder.at anzuhören.
-
-Klicke auf folgenden Link, um zuzuhören:
-${inviteLink}
-
-Liebe Grüße,
-Das Team von Totenbilder.at`,
-                html: `<p>Hallo,</p><p>du wurdest eingeladen, dir Aufnahmen auf Totenbilder.at anzuhören.</p><p><a href="${inviteLink}">Hier klicken, um zuzuhören</a></p><p>Liebe Grüße,<br>Das Team von Totenbilder.at</p>`
-            };
-            await transporter.sendMail(mailOptions);
+            try {
+                const mailOptions = {
+                    from: `"Totenbilder.at" <${process.env.SMTP_USER || 'fischervorchdorf@gmx.at'}>`,
+                    to: email,
+                    subject: 'Du wurdest eingeladen, einer Lebensgeschichte zuzuhören',
+                    text: `Hallo,\n\ndu wurdest eingeladen, dir Aufnahmen auf Totenbilder.at anzuhören.\n\nKlicke auf folgenden Link, um zuzuhören:\n${inviteLink}\n\nLiebe Grüße,\nDas Team von Totenbilder.at`,
+                    html: `<p>Hallo,</p><p>du wurdest eingeladen, dir Aufnahmen auf Totenbilder.at anzuhören.</p><p><a href="${inviteLink}">Hier klicken, um zuzuhören</a></p><p>Liebe Grüße,<br>Das Team von Totenbilder.at</p>`
+                };
+                await transporter.sendMail(mailOptions);
+            } catch (mailErr) {
+                console.error('Mail-Fehler beim Einladen (DB-Eintrag wurde trotzdem gespeichert):', mailErr);
+            }
         }
+
         res.json({ success: true, message: 'Einladung gesendet.' });
     } catch (e) {
-        res.status(500).json({ error: 'Fehler beim Senden der Einladung.' });
+        console.error('Invite Error:', e);
+        res.status(500).json({ error: 'Fehler beim Speichern der Einladung: ' + e.message });
     }
 });
 
