@@ -446,112 +446,182 @@ function startApp() {
     document.getElementById('intro-page').style.display = 'none';
     document.getElementById('login-page').style.display = 'block';
     setTimeout(() => {
-        const input = document.getElementById('login-vorname');
+        const input = document.getElementById('auth-email');
         if (input) input.focus();
     }, 100);
 }
 
-function setLoginRole(role) {
-    currentLoginRole = role;
+let currentLoginMode = 'login'; // 'login' oder 'register'
 
-    // UI Styling anpassen
-    document.getElementById('tab-erzaehler').style.background = role === 'erzaehler' ? 'var(--accent-color)' : 'var(--secondary-color)';
-    document.getElementById('tab-zuhoerer').style.background = role === 'zuhoerer' ? 'var(--accent-color)' : 'var(--secondary-color)';
+function switchLoginTab(mode) {
+    currentLoginMode = mode;
 
-    // Text und Felder anpassen
-    if (role === 'erzaehler') {
-        document.getElementById('label-pin').innerText = 'Dein Erzähler PIN';
-        document.getElementById('feld-zuhoerer-pin').style.display = 'block';
-        document.getElementById('login-role-desc').innerText = 'Du nimmst deine Geschichten auf. Falls du neu bist, lege einfach deine PINs beim Anmelden fest.';
+    const tabLogin = document.getElementById('tab-login');
+    const tabRegister = document.getElementById('tab-register');
+    const btnSubmit = document.getElementById('btn-auth-submit');
+    const feldRepeat = document.getElementById('feld-password-repeat');
+    const forgotContainer = document.getElementById('forgot-password-container');
+    const subtitle = document.getElementById('login-subtitle');
+    const errorEl = document.getElementById('auth-error');
+
+    errorEl.style.display = 'none';
+
+    if (mode === 'login') {
+        tabLogin.style.background = 'var(--accent-color)';
+        tabRegister.style.background = 'var(--secondary-color)';
+        btnSubmit.innerText = 'Anmelden';
+        feldRepeat.style.display = 'none';
+        forgotContainer.style.display = 'block';
+        subtitle.innerText = 'Melde dich an, um weiterzuerzählen.';
     } else {
-        document.getElementById('label-pin').innerText = 'Der Zuhörer PIN';
-        document.getElementById('feld-zuhoerer-pin').style.display = 'none';
-        document.getElementById('login-role-desc').innerText = 'Du bist Angehöriger und möchtest den Geschichten lauschen. Bitte gib die Daten des Erzählers und den Zuhörer-PIN ein.';
+        tabRegister.style.background = 'var(--accent-color)';
+        tabLogin.style.background = 'var(--secondary-color)';
+        btnSubmit.innerText = 'Registrieren';
+        feldRepeat.style.display = 'block';
+        forgotContainer.style.display = 'none';
+        subtitle.innerText = 'Willkommen. Erstelle ein neues Konto.';
     }
 }
 
-async function loginUser() {
-    const vorname = document.getElementById('login-vorname').value.trim();
-    const nachname = document.getElementById('login-nachname').value.trim();
-    const geburtsdatum = document.getElementById('login-geburtsdatum').value;
-    const pin = document.getElementById('login-pin').value.trim();
-    const zuhoererPinNeu = document.getElementById('login-zuhoerer-pin-neu').value.trim();
-    const email = document.getElementById('login-email').value.trim();
+async function submitAuth() {
+    const email = document.getElementById('auth-email').value.trim();
+    const password = document.getElementById('auth-password').value;
+    const errorEl = document.getElementById('auth-error');
 
-    const errorEl = document.getElementById('login-error');
-
-    if (!vorname || !nachname || !geburtsdatum || !pin) {
-        errorEl.textContent = "Bitte alle (benötigten) Felder ausfüllen.";
+    if (!email || !password) {
+        errorEl.textContent = 'Bitte E-Mail und Passwort eingeben.';
         errorEl.style.display = 'block';
         return;
     }
 
+    if (currentLoginMode === 'register') {
+        const passwordRepeat = document.getElementById('auth-password-repeat').value;
+        if (password !== passwordRepeat) {
+            errorEl.textContent = 'Die Passwörter stimmen nicht überein.';
+            errorEl.style.display = 'block';
+            return;
+        }
+    }
+
     errorEl.style.display = 'none';
-    document.getElementById('forgot-pin-container').style.display = 'none';
+    const endpoint = currentLoginMode === 'login' ? '/api/login' : '/api/register';
 
     try {
-        const payload = {
-            vorname,
-            nachname,
-            geburtsdatum,
-            role: currentLoginRole,
-            pin
-        };
-        if (currentLoginRole === 'erzaehler' && zuhoererPinNeu) {
-            payload.zuhoererPinNeu = zuhoererPinNeu;
-        }
-        if (email) {
-            payload.email = email;
-        }
-
-        const res = await fetch('/api/auth', {
+        const res = await fetch(endpoint, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
+            body: JSON.stringify({ email, password })
+        });
+        const data = await res.json();
+
+        if (res.ok) {
+            storageManager.setSpeaker(data.speakerId);
+            isZuhoererGlobal = data.isZuhoerer;
+
+            localStorage.setItem('speakerAuth', JSON.stringify({
+                speakerId: data.speakerId,
+                isZuhoerer: data.isZuhoerer,
+                vorname: data.vorname || null,
+                email: email,
+                emailVerified: data.emailVerified !== false
+            }));
+
+            await storageManager.loadData();
+            showNotification(data.message || 'Erfolgreich.');
+
+            document.getElementById('login-page').style.display = 'none';
+
+            if (data.emailVerified === false) {
+                document.getElementById('verify-email-display').textContent = email;
+                document.getElementById('email-verify-modal').style.display = 'flex';
+            } else if (data.needsProfile) {
+                document.getElementById('onboarding-modal').style.display = 'flex';
+            } else {
+                showCategoriesPage(data.vorname);
+            }
+        } else {
+            errorEl.textContent = data.error || 'Ein Fehler ist aufgetreten.';
+            errorEl.style.display = 'block';
+        }
+    } catch (e) {
+        errorEl.textContent = 'Verbindungsfehler zum Server.';
+        errorEl.style.display = 'block';
+    }
+}
+
+async function forgotPassword() {
+    const email = document.getElementById('auth-email').value.trim();
+    const errorEl = document.getElementById('auth-error');
+    const msgEl = document.getElementById('forgot-password-message');
+
+    if (!email) {
+        errorEl.textContent = 'Bitte gib deine E-Mail oben ein, um das Passwort zurückzusetzen.';
+        errorEl.style.display = 'block';
+        return;
+    }
+
+    try {
+        const res = await fetch('/api/forgot-password', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email })
+        });
+        const data = await res.json();
+
+        if (res.ok) {
+            msgEl.textContent = data.message || 'Passwort zurückgesetzt. Prüfe deine E-Mails.';
+            msgEl.style.display = 'block';
+            errorEl.style.display = 'none';
+        } else {
+            errorEl.textContent = data.error || 'Fehler beim Zurücksetzen.';
+            errorEl.style.display = 'block';
+        }
+    } catch (e) {
+        errorEl.textContent = 'Verbindungsfehler.';
+        errorEl.style.display = 'block';
+    }
+}
+
+async function submitOnboarding() {
+    const vorname = document.getElementById('onboarding-vorname').value.trim();
+    const nachname = document.getElementById('onboarding-nachname').value.trim();
+    const geburtsdatum = document.getElementById('onboarding-geburtsdatum').value;
+    const errorEl = document.getElementById('onboarding-error');
+
+    if (!vorname || !nachname || !geburtsdatum) {
+        errorEl.textContent = 'Bitte alle Felder ausfüllen.';
+        errorEl.style.display = 'block';
+        return;
+    }
+
+    try {
+        const res = await fetch('/api/update-profile', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                speakerId: storageManager.speakerId,
+                vorname,
+                nachname,
+                geburtsdatum
+            })
         });
 
         const data = await res.json();
+        if (res.ok) {
+            document.getElementById('onboarding-modal').style.display = 'none';
+            // Update auth in local storage
+            let auth = JSON.parse(localStorage.getItem('speakerAuth')) || {};
+            auth.vorname = data.vorname;
+            localStorage.setItem('speakerAuth', JSON.stringify(auth));
 
-        if (!res.ok) {
-            errorEl.textContent = data.error || "Fehler bei der Anmeldung.";
-            errorEl.style.display = 'block';
-
-            // Wenn der PIN falsch war, zeige den "Passwort vergessen" Button an
-            if (data.error === 'Falscher Erzähler-PIN.' || data.error === 'Falscher Zuhörer-PIN.') {
-                document.getElementById('forgot-pin-container').style.display = 'block';
-            }
-            return;
-        }
-
-        storageManager.setSpeaker(data.speakerId);
-        isZuhoererGlobal = data.isZuhoerer;
-
-        // Save to localStorage for persistent login
-        localStorage.setItem('speakerAuth', JSON.stringify({
-            speakerId: data.speakerId,
-            isZuhoerer: data.isZuhoerer,
-            vorname: vorname,
-            role: currentLoginRole,
-            email: data.email || null,
-            emailVerified: data.emailVerified
-        }));
-
-        await storageManager.loadData();
-
-        showNotification(data.message || "Erfolgreich eingeloggt.");
-
-        document.getElementById('login-page').style.display = 'none';
-
-        // Check if email needs verification
-        if (data.email && data.emailVerified === false) {
-            document.getElementById('verify-email-display').textContent = data.email;
-            document.getElementById('email-verify-modal').style.display = 'flex';
+            showCategoriesPage(data.vorname);
+            showNotification('Profil erfolgreich gespeichert!');
         } else {
-            showCategoriesPage(vorname);
+            errorEl.textContent = data.error || 'Fehler beim Speichern.';
+            errorEl.style.display = 'block';
         }
     } catch (e) {
-        console.error(e);
-        errorEl.textContent = "Konnte keine Verbindung zum Server herstellen.";
+        errorEl.textContent = 'Verbindungsfehler.';
         errorEl.style.display = 'block';
     }
 }
@@ -564,13 +634,67 @@ function showCategoriesPage(vorname) {
     const titleEl = document.querySelector('#categories-page .header h2');
     if (isZuhoererGlobal) {
         titleEl.textContent = `Die Lebensgeschichte von ${vorname}`;
-        document.getElementById('profil-btn-container').style.display = 'none';
+        document.getElementById('profil-btn-container').innerHTML = `
+            <button class="btn-secondary" onclick="logoutUser()"
+                style="padding: 6px 15px; font-size: 0.85rem; border: none; background: #fee2e2; color: #b91c1c;">Abmelden</button>
+        `;
     } else {
         titleEl.textContent = 'Deine Lebensgeschichte';
-        document.getElementById('profil-btn-container').style.display = 'flex';
+        document.getElementById('profil-btn-container').innerHTML = `
+            <button class="btn-secondary" onclick="document.getElementById('invite-listener-modal').style.display='flex';"
+                style="padding: 6px 15px; font-size: 0.85rem; border: none; background: #e2e8f0; color: var(--primary-color);">💌 Einladen</button>
+            <button class="btn-secondary" onclick="openProfileModal()"
+                style="padding: 6px 15px; font-size: 0.85rem; border: none; background: #e2e8f0; color: var(--primary-color);">⚙️ Passwort</button>
+            <button class="btn-secondary" onclick="logoutUser()"
+                style="padding: 6px 15px; font-size: 0.85rem; border: none; background: #fee2e2; color: #b91c1c;">Abmelden</button>
+        `;
     }
 
     renderCategories();
+}
+
+function closeInviteModal() {
+    document.getElementById('invite-listener-modal').style.display = 'none';
+}
+
+async function sendInvite() {
+    const email = document.getElementById('invite-email').value.trim();
+    const errorEl = document.getElementById('invite-error');
+    const successEl = document.getElementById('invite-success');
+
+    errorEl.style.display = 'none';
+    successEl.style.display = 'none';
+
+    if (!email) {
+        errorEl.textContent = 'Bitte eine E-Mail eingeben.';
+        errorEl.style.display = 'block';
+        return;
+    }
+
+    try {
+        const res = await fetch('/api/invite-listener', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ speakerId: storageManager.speakerId, email })
+        });
+        const data = await res.json();
+
+        if (res.ok) {
+            successEl.textContent = 'Einladung erfolgreich versendet!';
+            successEl.style.display = 'block';
+            document.getElementById('invite-email').value = '';
+            setTimeout(() => {
+                closeInviteModal();
+                successEl.style.display = 'none';
+            }, 2000);
+        } else {
+            errorEl.textContent = data.error || 'Fehler beim Senden.';
+            errorEl.style.display = 'block';
+        }
+    } catch (e) {
+        errorEl.textContent = 'Verbindungsfehler.';
+        errorEl.style.display = 'block';
+    }
 }
 
 function logoutUser() {
@@ -581,16 +705,17 @@ function logoutUser() {
     document.getElementById('profile-modal').style.display = 'none';
 
     // Formulare zurücksetzen
-    document.getElementById('login-pin').value = '';
-    document.getElementById('login-zuhoerer-pin-neu').value = '';
+    document.getElementById('auth-email').value = '';
+    document.getElementById('auth-password').value = '';
+    document.getElementById('auth-password-repeat').value = '';
 
     document.getElementById('intro-page').style.display = 'block';
     showNotification('Sicher abgemeldet.');
 }
 
 function openProfileModal() {
-    document.getElementById('profile-erzaehler-pin').value = '';
-    document.getElementById('profile-zuhoerer-pin').value = '';
+    document.getElementById('profile-new-password').value = '';
+    document.getElementById('profile-old-password').value = '';
     document.getElementById('profile-error').style.display = 'none';
     document.getElementById('profile-modal').style.display = 'flex';
 }
@@ -601,28 +726,29 @@ function closeProfileModal() {
 
 async function saveProfilePins() {
     const errorEl = document.getElementById('profile-error');
-    const neuerErzaehler = document.getElementById('profile-erzaehler-pin').value.trim();
-    const neuerZuhoerer = document.getElementById('profile-zuhoerer-pin').value.trim();
+    const newPassword = document.getElementById('profile-new-password').value.trim();
+    const oldPassword = document.getElementById('profile-old-password').value.trim();
 
-    if (!neuerErzaehler && !neuerZuhoerer) {
-        closeProfileModal();
+    if (!newPassword || !oldPassword) {
+        errorEl.textContent = 'Bitte beide Felder ausfüllen.';
+        errorEl.style.display = 'block';
         return;
     }
 
     try {
-        const res = await fetch('/api/change-pin', {
+        const res = await fetch('/api/change-password', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 speakerId: storageManager.speakerId,
-                erzaehlerPin: neuerErzaehler || undefined,
-                zuhoererPin: neuerZuhoerer || undefined
+                oldPassword,
+                newPassword
             })
         });
 
         const data = await res.json();
         if (res.ok) {
-            showNotification('PINs erfolgreich aktualisiert!');
+            showNotification('Passwort erfolgreich aktualisiert!');
             closeProfileModal();
         } else {
             errorEl.textContent = data.error || 'Fehler beim Speichern.';
@@ -692,34 +818,7 @@ function skipVerification() {
     showNotification('E-Mail kann später noch verifiziert werden.', 4000);
 }
 
-async function forgotPin() {
-    const vorname = document.getElementById('login-vorname').value.trim();
-    const nachname = document.getElementById('login-nachname').value.trim();
-    const geburtsdatum = document.getElementById('login-geburtsdatum').value;
 
-    if (!vorname || !nachname || !geburtsdatum) {
-        alert("Bitte fülle Name und Geburtsdatum aus, damit wir dein Profil finden können.");
-        return;
-    }
-
-    try {
-        const res = await fetch('/api/forgot-pin', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ vorname, nachname, geburtsdatum })
-        });
-
-        const data = await res.json();
-        if (res.ok) {
-            alert(data.message || "Anfrage zur PIN-Wiederherstellung gesendet. Bitte frage bei Martin Fischer nach oder schau in deine Mails (Coming Soon).");
-        } else {
-            alert(data.error || "Fehler bei der PIN-Wiederherstellung.");
-        }
-    } catch (e) {
-        console.error(e);
-        alert("Verbindung zum Server fehlgeschlagen.");
-    }
-}
 
 function backToCategories() {
     document.getElementById('questions-page').style.display = 'none';
