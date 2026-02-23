@@ -192,8 +192,32 @@ class AudioRecorder {
 
     async start() {
         try {
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            this.mediaRecorder = new MediaRecorder(stream);
+            const stream = await navigator.mediaDevices.getUserMedia({
+                audio: {
+                    echoCancellation: true,
+                    noiseSuppression: true,
+                    autoGainControl: true
+                }
+            });
+
+            // Fix für Samsung/Android "Micky Maus/Donald Duck" Stimme
+            // Erzwingt einen korrekten Codec und verhindert Sample-Rate-Fehler
+            const mimeTypes = [
+                'audio/webm;codecs=opus',
+                'audio/webm',
+                'audio/mp4',
+                'audio/ogg;codecs=opus'
+            ];
+
+            let options = {};
+            for (const mimeType of mimeTypes) {
+                if (MediaRecorder.isTypeSupported(mimeType)) {
+                    options.mimeType = mimeType;
+                    break;
+                }
+            }
+
+            this.mediaRecorder = new MediaRecorder(stream, options);
             this.audioChunks = [];
             this.recordingStartTime = Date.now();
             this.isRecording = true;
@@ -832,7 +856,7 @@ function renderQuestions() {
                             ${emotionBadgeHTML}
                             <audio controls class="audio-player" src="${rec.data}"></audio>
                             <button class="btn-download" style="margin-top: 5px;" onclick="downloadRecording('${currentCategory.id}', ${index}, ${recIndex})">
-                                ⬇️ MP3 Herunterladen
+                                ⬇️ Herunterladen
                             </button>
                             ${!isZuhoererGlobal ? `<button class="btn-secondary" style="margin-top: 5px; background: #fee2e2; color: #b91c1c; border: none; margin-left: 10px;" onclick="deleteRecording(${rec.id})">🗑️ Löschen</button>` : ''}
                         </div>
@@ -1015,20 +1039,42 @@ function downloadRecording(categoryId, questionIndex, recordIndex = 0) {
 
     const dateObj = new Date(recording.createdAt);
     const dateString = dateObj.toLocaleDateString('de-DE', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\./g, '-');
-    const fileName = `Frage ${globalQuestionNumber} - ${dateString}.mp3`;
+    const fileNameBase = `Frage ${globalQuestionNumber} - ${dateString}`;
 
     if (recording.isRemote) {
         // Backend URL (die in `recording.data` ist ein lokaler filePath wie `/uploads/...`)
         const url = recording.data;
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = fileName;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        showNotification(`✓ Download gestartet!`);
+        const fileExt = url.includes('.') ? url.split('.').pop() : 'webm';
+        const finalFileName = `${fileNameBase}.${fileExt}`;
+
+        // Force download via fetch to prevent browser from just opening a player
+        fetch(url)
+            .then(res => res.blob())
+            .then(blob => {
+                const blobUrl = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = blobUrl;
+                link.download = finalFileName;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(blobUrl);
+                showNotification(`✓ Download gestartet!`);
+            })
+            .catch(err => {
+                console.error("Fehler beim Download:", err);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = finalFileName;
+                link.target = '_blank';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            });
         return;
     }
+
+    const fileName = `${fileNameBase}.mp3`;
 
     // Alter Code (Base64), falls mal wieder Offline-Fallback eingebaut wird
     const byteCharacters = atob(recording.data.split(',')[1]);
