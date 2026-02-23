@@ -1131,6 +1131,38 @@ function showNotification(message) {
    ============================================ */
 
 async function tryAutoLogin() {
+    // Check for listener token in URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const listenerToken = urlParams.get('listener_token');
+
+    if (listenerToken) {
+        try {
+            const res = await fetch(`/api/listener-auth/${listenerToken}`);
+            const data = await res.json();
+
+            if (res.ok) {
+                storageManager.setSpeaker(data.speakerId);
+                isZuhoererGlobal = true;
+                currentLoginRole = 'zuhoerer';
+
+                await storageManager.loadData();
+                document.getElementById('intro-page').style.display = 'none';
+
+                showNotification(`Willkommen! Du hörst die Geschichten von ${data.vorname}.`);
+                showCategoriesPage(data.vorname);
+
+                // Remove token from URL for clean history
+                window.history.replaceState({}, document.title, window.location.pathname);
+                return;
+            } else {
+                alert(data.error || 'Ungültiger Einladungslink.');
+            }
+        } catch (e) {
+            console.error('Fehler beim Einladungslink:', e);
+            alert('Verbindungsfehler beim Prüfen des Einladungslinks.');
+        }
+    }
+
     const savedAuthInfo = localStorage.getItem('speakerAuth');
     if (savedAuthInfo) {
         try {
@@ -1148,6 +1180,8 @@ async function tryAutoLogin() {
                 if (auth.email && auth.emailVerified === false) {
                     document.getElementById('verify-email-display').textContent = auth.email;
                     document.getElementById('email-verify-modal').style.display = 'flex';
+                } else if (!isZuhoererGlobal && auth.needsProfile) {
+                    document.getElementById('onboarding-modal').style.display = 'flex';
                 } else {
                     showCategoriesPage(auth.vorname || 'Speaker');
                 }

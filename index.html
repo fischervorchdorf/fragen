@@ -148,113 +148,108 @@
             <button class="btn-home" onclick="backToIntro()" title="Zur Startseite">
                 <div class="logo-small">totenbilder.at</div>
             </button>
-            <h2>Wer bist du?</h2>
-            <p class="subtitle">Bitte gib deine Daten ein, damit wir deine Aufnahmen dir zuordnen können.</p>
+            <h2>Geschichten für die Ewigkeit!</h2>
+            <p class="subtitle" id="login-subtitle">Melde dich an, um deine Geschichten zu erzählen.</p>
         </div>
 
         <div class="intro-container" style="max-width: 500px; padding: 20px;">
             <div class="login-tabs" style="display: flex; gap: 10px; margin-bottom: 20px;">
-                <button id="tab-erzaehler" class="btn-primary" onclick="setLoginRole('erzaehler')"
-                    style="flex: 1; margin: 0; padding: 12px; background: var(--accent-color);">🎙️ Erzähler</button>
-                <button id="tab-zuhoerer" class="btn-secondary" onclick="setLoginRole('zuhoerer')"
-                    style="flex: 1; margin: 0; padding: 12px;">🎧 Zuhörer</button>
+                <button id="tab-login" class="btn-primary" onclick="switchLoginTab('login')"
+                    style="flex: 1; margin: 0; padding: 12px; background: var(--accent-color);">Anmelden</button>
+                <button id="tab-register" class="btn-secondary" onclick="switchLoginTab('register')"
+                    style="flex: 1; margin: 0; padding: 12px;">Registrieren</button>
             </div>
+            
             <div class="intro-content" style="padding: 30px;">
-                <p id="login-role-desc" style="margin-bottom: 20px; font-size: 0.9rem; color: var(--text-light);">
-                    Du nimmst deine Geschichten auf. Falls du neu bist, lege einfach deine PINs beim Anmelden fest.
-                </p>
-                <div style="margin-bottom: 15px;">
-                    <label style="display: block; margin-bottom: 5px;">Vorname</label>
-                    <input type="text" id="login-vorname" placeholder="Dein Vorname"
-                        style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;" required>
-                </div>
-                <div style="margin-bottom: 15px;">
-                    <label style="display: block; margin-bottom: 5px;">Nachname</label>
-                    <input type="text" id="login-nachname" placeholder="Dein Nachname"
-                        style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;" required>
-                </div>
                 <div style="margin-bottom: 20px;">
-                    <label style="display: block; margin-bottom: 5px;">Geburtsdatum</label>
-                    <input type="date" id="login-geburtsdatum"
+                    <label style="display: block; margin-bottom: 5px;">E-Mail</label>
+                    <input type="email" id="auth-email" placeholder="deine@email.at"
                         style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;" required>
                 </div>
-                <div id="feld-email" style="margin-bottom: 20px;">
-                    <label style="display: block; margin-bottom: 5px;">E-Mail (für PIN-Wiederherstellung)</label>
-                    <input type="email" id="login-email" placeholder="deine@email.at"
+                
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 5px;">Passwort</label>
+                    <input type="password" id="auth-password" placeholder="Passwort"
+                        style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;" required>
+                </div>
+
+                <div id="feld-password-repeat" style="margin-bottom: 25px; display: none;">
+                    <label style="display: block; margin-bottom: 5px;">Passwort wiederholen</label>
+                    <input type="password" id="auth-password-repeat" placeholder="Passwort wiederholen"
                         style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
                 </div>
-                <div style="margin-bottom: 20px;">
-                    <label id="label-pin" style="display: block; margin-bottom: 5px;">Dein Erzähler PIN</label>
-                    <input type="password" id="login-pin" placeholder="z.B. 1234"
-                        style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;" required>
+
+                <div id="auth-error" style="color: red; margin-bottom: 15px; display: none;"></div>
+                
+                <button id="btn-auth-submit" class="btn-primary" onclick="submitAuth()"
+                    style="width: 100%; margin: 0; background-color: var(--primary-color);">Anmelden</button>
+
+                <div id="forgot-password-container" style="margin-top: 15px; text-align: center;">
+                    <button class="btn-text" onclick="forgotPassword()"
+                        style="font-size: 0.85rem; background: none; border: none; color: var(--text-light); text-decoration: underline; cursor: pointer;">Passwort vergessen?</button>
                 </div>
-                <!-- Dieses Feld wird nur im Erzähler-Modus bei Erst-Anmeldung als Ausweichfeld genutzt oder wir blenden es generell ein, falls der Erzähler es setzen möchte -->
-                <div id="feld-zuhoerer-pin" style="margin-bottom: 25px;">
-                    <label style="display: block; margin-bottom: 5px;">Zuhörer-PIN festlegen (für Familie)</label>
-                    <input type="text" id="login-zuhoerer-pin-neu" placeholder="z.B. 0000"
-                        style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
-                    <small style="color: var(--text-light); display: inline-block; margin-top: 5px;">Gib diesen Pin
-                        später deinen Angehörigen, damit sie zuhören können. Bei bereits existierenden Profilen bleibt
-                        dieses Feld leer.</small>
-                </div>
-
-                <div id="login-error" style="color: red; margin-bottom: 15px; display: none;"></div>
-                <button class="btn-primary" onclick="loginUser()"
-                    style="width: 100%; margin: 0; background-color: var(--primary-color);">Einloggen / Profil
-                    anlegen</button>
-
-                <div id="forgot-pin-container" style="margin-top: 15px; text-align: center; display: none;">
-                    <button class="btn-secondary" onclick="forgotPin()"
-                        style="font-size: 0.85rem; padding: 8px 15px;">PIN vergessen?</button>
-                </div>
-
-                <!-- Sicherheits-FAQ / Erklärung -->
-                <div style="margin-top: 35px; border-top: 1px solid #eee; padding-top: 25px; text-align: left;">
-                    <h3 style="font-size: 1.1rem; color: var(--primary-color); margin-bottom: 15px;">🔒 Deine Sicherheit
-                        & Privatsphäre</h3>
-
-                    <details style="margin-bottom: 10px; cursor: pointer;">
-                        <summary style="font-weight: 500; padding: 5px; outline: none;">Wozu brauche ich zwei PINs?
-                        </summary>
-                        <p
-                            style="margin-top: 10px; padding: 10px; background: rgba(0,0,0,0.02); border-left: 3px solid var(--accent-color); font-size: 0.9rem; color: var(--text-color); line-height: 1.5;">
-                            Dein <strong>Erzähler-PIN</strong> ist dein privates Passwort. Nur damit kannst du dich
-                            anmelden, Antworten aufzeichnen und Zeitkapsel-Sperren verwalten. Niemand sonst darf diesen
-                            PIN kennen.<br><br>
-                            Dein <strong>Zuhörer-PIN</strong> ist für deine Angehörigen gedacht. Wenn du möchtest, dass
-                            deine Familie später deinen Geschichten lauschen kann, gibst du ihnen einfach diesen
-                            Zuhörer-PIN. Im Zuhörer-Modus können Angehörige <strong>keine</strong> neuen Aufnahmen
-                            erstellen oder überschreiben.
-                        </p>
-                    </details>
-
-                    <details style="margin-bottom: 10px; cursor: pointer;">
-                        <summary style="font-weight: 500; padding: 5px; outline: none;">Was ist die Zeitkapsel-Sperre?
-                        </summary>
-                        <p
-                            style="margin-top: 10px; padding: 10px; background: rgba(0,0,0,0.02); border-left: 3px solid var(--accent-color); font-size: 0.9rem; color: var(--text-color); line-height: 1.5;">
-                            Manche Dinge sollen erst in der Zukunft gehört werden. Bei jeder Aufnahme kannst du im
-                            Player optional ein Datum eintragen, bis wann die Audiodatei gesperrt sein soll (z.B. in 5
-                            Jahren). Bis zu diesem Stichtag sehen deine Angehörigen im System lediglich, dass eine
-                            gesperrte Erinnerung vorliegt – können diese aber nicht anhören.
-                        </p>
-                    </details>
-
-                    <details style="margin-bottom: 10px; cursor: pointer;">
-                        <summary style="font-weight: 500; padding: 5px; outline: none;">Was passiert mit meinen Daten?
-                        </summary>
-                        <p
-                            style="margin-top: 10px; padding: 10px; background: rgba(0,0,0,0.02); border-left: 3px solid var(--accent-color); font-size: 0.9rem; color: var(--text-color); line-height: 1.5;">
-                            Deine hochgeladenen Audio-Geschichten und deine Daten liegen 100% verschlüsselt und sicher
-                            auf unserem privaten Server. Es werden keine Daten an Dritte (wie Google oder Facebook)
-                            weiterverkauft oder analysiert. Du bist und bleibst Eigentümer deiner Lebensgeschichte.
-                        </p>
-                    </details>
-                </div>
+                
+                <div id="forgot-password-message" style="color: green; margin-top: 15px; font-size: 0.85rem; display: none; text-align: center;"></div>
             </div>
         </div>
     </div>
 
+    <!-- Onboarding Modal (Profil vervollständigen) -->
+    <div id="onboarding-modal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 400px; text-align: left;">
+            <div class="modal-header">
+                <h3>Profil vervollständigen</h3>
+            </div>
+            <div class="modal-body">
+                <p style="font-size: 0.95rem; margin-bottom: 20px; color: var(--text-color);">
+                    Willkommen! Bitte verrate uns deinen Namen und dein Geburtsdatum, damit wir deine Geschichten richtig zuordnen können.
+                </p>
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px;">Vorname</label>
+                    <input type="text" id="onboarding-vorname" placeholder="Dein Vorname"
+                        style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;" required>
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px;">Nachname</label>
+                    <input type="text" id="onboarding-nachname" placeholder="Dein Nachname"
+                        style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;" required>
+                </div>
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 5px;">Geburtsdatum</label>
+                    <input type="date" id="onboarding-geburtsdatum"
+                        style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;" required>
+                </div>
+                <p id="onboarding-error" style="color: red; display: none; margin-bottom: 15px; font-size: 0.85rem;"></p>
+                <button class="btn-primary" onclick="submitOnboarding()" style="width: 100%; margin: 0;">Speichern</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Hörer einladen Modal -->
+    <div id="invite-listener-modal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">
+                <h3>Zuhörer einladen</h3>
+                <button class="btn-close" onclick="closeInviteModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <p style="font-size: 0.95rem; margin-bottom: 20px; color: var(--text-color);">
+                    Lade Freunde oder Familie per E-Mail ein, um deinen Geschichten zuzuhören.
+                </p>
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 5px;">E-Mail Adresse des Zuhörers</label>
+                    <input type="email" id="invite-email" placeholder="freund@email.at"
+                        style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;" required>
+                </div>
+                <p id="invite-error" style="color: red; display: none; margin-bottom: 15px; font-size: 0.85rem;"></p>
+                <p id="invite-success" style="color: green; display: none; margin-bottom: 15px; font-size: 0.85rem;"></p>
+                
+                <button class="btn-primary" onclick="sendInvite()" style="width: 100%; margin: 0;">Einladung senden</button>
+            </div>
+        </div>
+    </div>
+
+    
     <!-- Kategorien-Übersicht -->
     <div id="categories-page" class="page" style="display: none;">
         <div class="header">
@@ -267,7 +262,7 @@
                 <div id="profil-btn-container" style="display: flex; gap: 10px;">
                     <button class="btn-secondary" onclick="openProfileModal()"
                         style="padding: 6px 15px; font-size: 0.85rem; border: none; background: #e2e8f0; color: var(--primary-color);">⚙️
-                        PIN ändern</button>
+                        Passwort ändern</button>
                     <button class="btn-secondary" onclick="logoutUser()"
                         style="padding: 6px 15px; font-size: 0.85rem; border: none; background: #fee2e2; color: #b91c1c;">Abmelden</button>
                 </div>
@@ -398,7 +393,7 @@
         </div>
     </div>
 
-    <!-- Profil & PIN Modal -->
+    <!-- Profil & Passwort Modal -->
     <div id="profile-modal" class="modal" style="display: none;">
         <div class="modal-content" style="max-width: 450px;">
             <div class="modal-header">
@@ -406,28 +401,28 @@
                 <button class="btn-close" onclick="closeProfileModal()">×</button>
             </div>
             <div class="modal-body">
-                <p style="font-size: 0.9rem; color: var(--text-light); margin-bottom: 20px;">Hier kannst du neue PINs
-                    für dich oder deine Angehörigen setzen. Lass das Feld leer, wenn du den PIN nicht ändern möchtest.
+                <p style="font-size: 0.9rem; color: var(--text-light); margin-bottom: 20px;">Hier kannst du neue Passwort
+                    für dich oder deine Angehörigen setzen. Lass das Feld leer, wenn du den Passwort nicht ändern möchtest.
                 </p>
 
                 <div style="margin-bottom: 25px;">
                     <label
                         style="display: block; margin-bottom: 5px; font-weight: bold; color: var(--primary-color);">Dein
-                        Erzähler-PIN</label>
-                    <input type="password" id="profile-erzaehler-pin" placeholder="Neuer Erzähler-PIN"
+                        Erzähler-Passwort</label>
+                    <input type="password" id="profile-new-password" placeholder="Neues Passwort setzen"
                         style="width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 1rem;">
 
                     <label
                         style="display: block; margin-bottom: 5px; font-weight: bold; color: var(--primary-color); margin-top: 15px;">Der
-                        Zuhörer-PIN für Angehörige</label>
-                    <input type="password" id="profile-zuhoerer-pin" placeholder="Neuer Zuhörer-PIN"
+                        Zuhörer-Passwort für Angehörige</label>
+                    <input type="password" id="profile-old-password" placeholder="Altes Passwort"
                         style="width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 1rem;">
                 </div>
 
                 <p id="profile-error"
                     style="color: red; display: none; margin-bottom: 15px; font-size: 0.85rem; text-align: center;"></p>
 
-                <button class="btn-primary" onclick="saveProfilePins()" style="width: 100%; margin: 0 0 15px 0;">PINs
+                <button class="btn-primary" onclick="saveProfilePins()" style="width: 100%; margin: 0 0 15px 0;">Passwort
                     speichern</button>
             </div>
         </div>

@@ -1,5 +1,6 @@
 require('dotenv').config();
 const express = require('express');
+const crypto = require('crypto');
 const mysql = require('mysql2/promise');
 const cors = require('cors');
 const multer = require('multer');
@@ -81,14 +82,27 @@ function generateVerificationCode() {
     return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
-async function sendVerificationEmail(email, vorname, code) {
+function hashPassword(password) {
+    return crypto.createHash('sha256').update(password).digest('hex');
+}
+
+function generateToken() {
+    return crypto.randomBytes(32).toString('hex');
+}
+
+async function sendVerificationEmail(email, code) {
     if (!process.env.SMTP_PASSWORD) return;
     const mailOptions = {
         from: `"Totenbilder.at" <${process.env.SMTP_USER || 'fischervorchdorf@gmx.at'}>`,
         to: email,
         subject: 'Bestätige deine E-Mail bei Totenbilder.at',
-        text: `Hallo ${vorname},\n\nbitte bestätige deine E-Mail-Adresse mit diesem Code: ${code}\n\nLiebe Grüße,\nDas Team von Totenbilder.at`,
-        html: `<p>Hallo ${vorname},</p><p>bitte bestätige deine E-Mail-Adresse mit diesem Code:</p><h2>${code}</h2><p>Liebe Grüße,<br>Das Team von Totenbilder.at</p>`
+        text: `Hallo,
+
+bitte bestätige deine E-Mail-Adresse mit diesem Code: ${code}
+
+Liebe Grüße,
+Das Team von Totenbilder.at`,
+        html: `<p>Hallo,</p><p>bitte bestätige deine E-Mail-Adresse mit diesem Code:</p><h2>${code}</h2><p>Liebe Grüße,<br>Das Team von Totenbilder.at</p>`
     };
     try {
         await transporter.sendMail(mailOptions);
@@ -100,141 +114,107 @@ async function sendVerificationEmail(email, vorname, code) {
 
 // API Routes
 
-// 1. Auth: Login oder Registrierung
-app.post('/api/auth', async (req, res) => {
-    const { vorname, nachname, geburtsdatum, role, pin, zuhoererPinNeu, email } = req.body;
-
-    if (!vorname || !nachname || !geburtsdatum || !role || !pin) {
-        return res.status(400).json({ error: 'Bitte fülle alle (benötigten) Felder aus.' });
-    }
+// 1. Auth: Login
+app.post('/api/login', async (req, res) => {
+    const { email, password } = req.body;
+    if (!email || !password) return res.status(400).json({ error: 'Bitte E-Mail und Passwort eingeben.' });
 
     try {
-        // Prüfen, ob Person existiert
-        const [rows] = await pool.execute(
-            'SELECT id, erzaehler_pin, zuhoerer_pin, email, email_verified, email_verification_code FROM speakers WHERE vorname = ? AND nachname = ? AND geburtsdatum = ?',
-            [vorname, nachname, geburtsdatum]
-        );
-
+        const hashed = hashPassword(password);
+        const [rows] = await pool.execute('SELECT id, vorname, email_verified FROM speakers WHERE email = ? AND password = ?', [email, hashed]);
+        
         if (rows.length > 0) {
             const speaker = rows[0];
-
-            // Wenn eine E-Mail mitgegeben wurde, aber noch keine in der DB ist, speichern wir sie nach (Self-Service)
-            if (email && !speaker.email) {
-                const code = generateVerificationCode();
-                await pool.execute('UPDATE speakers SET email = ?, email_verification_code = ?, email_verified = false WHERE id = ?', [email, code, speaker.id]);
-                await sendVerificationEmail(email, vorname, code);
-                speaker.email = email;
-                speaker.email_verified = false;
-            }
-
-            // Person existiert bereits
-            if (role === 'erzaehler') {
-                if (speaker.erzaehler_pin !== pin) {
-                    return res.status(401).json({ error: 'Falscher Erzähler-PIN.' });
-                }
-                return res.json({
-                    speakerId: speaker.id,
-                    isZuhoerer: false,
-                    message: 'Person gefunden. Willkommen zurück, Erzähler!',
-                    email: speaker.email,
-                    emailVerified: !!speaker.email_verified
-                });
-            } else if (role === 'zuhoerer') {
-                if (speaker.zuhoerer_pin !== pin) {
-                    return res.status(401).json({ error: 'Falscher Zuhörer-PIN.' });
-                }
-                return res.json({ speakerId: speaker.id, isZuhoerer: true, message: 'Zuhörer-Login erfolgreich.' });
-            } else {
-                return res.status(400).json({ error: 'Unbekannte Rolle.' });
-            }
-        } else {
-            // Neue Person
-            if (role === 'zuhoerer') {
-                // Ein Zuhörer darf keine neue Person anlegen
-                return res.status(404).json({ error: 'Wir konnten zu diesen Daten noch keinen Erzähler finden.' });
-            }
-
-            // Neue Person anlegen (role = erzaehler)
-            if (!zuhoererPinNeu) {
-                return res.status(400).json({ error: 'Für ein neues Profil muss auch ein Zuhörer-PIN vergeben werden.' });
-            }
-
-            let code = null;
-            if (email) {
-                code = generateVerificationCode();
-            }
-
-            const [result] = await pool.execute(
-                'INSERT INTO speakers (vorname, nachname, geburtsdatum, erzaehler_pin, zuhoerer_pin, email, email_verification_code, email_verified) VALUES (?, ?, ?, ?, ?, ?, ?, false)',
-                [vorname, nachname, geburtsdatum, pin, zuhoererPinNeu, email || null, code]
-            );
-
-            if (email) {
-                await sendVerificationEmail(email, vorname, code);
-            }
-
-            return res.status(201).json({
-                speakerId: result.insertId,
+            return res.json({
+                speakerId: speaker.id,
                 isZuhoerer: false,
-                message: 'Neues Erzähler-Profil erfolgreich angelegt.',
-                email: email || null,
-                emailVerified: false
+                emailVerified: !!speaker.email_verified,
+                needsProfile: !speaker.vorname,
+                vorname: speaker.vorname
             });
+        } else {
+            return res.status(401).json({ error: 'E-Mail oder Passwort falsch.' });
         }
     } catch (error) {
-        console.error('Auth-Error:', error);
-        res.status(500).json({ error: 'Interner Server-Fehler bei der Datenbank.' });
+        console.error('Login Error:', error);
+        res.status(500).json({ error: 'Server-Fehler' });
     }
 });
 
-// NEU: PIN Wiederherstellung
-app.post('/api/forgot-pin', async (req, res) => {
-    const { vorname, nachname, geburtsdatum } = req.body;
+// Registrierung
+app.post('/api/register', async (req, res) => {
+    const { email, password } = req.body;
+    if (!email || !password) return res.status(400).json({ error: 'E-Mail und Passwort sind erforderlich.' });
 
     try {
-        const [rows] = await pool.execute(
-            'SELECT erzaehler_pin, email FROM speakers WHERE vorname = ? AND nachname = ? AND geburtsdatum = ?',
-            [vorname, nachname, geburtsdatum]
+        const [rows] = await pool.execute('SELECT id FROM speakers WHERE email = ?', [email]);
+        if (rows.length > 0) return res.status(400).json({ error: 'Diese E-Mail ist bereits registriert.' });
+
+        const hashed = hashPassword(password);
+        const code = generateVerificationCode();
+
+        const [result] = await pool.execute(
+            'INSERT INTO speakers (email, password, email_verification_code, email_verified) VALUES (?, ?, ?, false)',
+            [email, hashed, code]
         );
 
-        if (rows.length === 0) {
-            return res.status(404).json({ error: 'Profil nicht gefunden.' });
-        }
+        await sendVerificationEmail(email, code);
 
-        const speaker = rows[0];
-        if (!speaker.email) {
-            return res.status(400).json({ error: 'Keine E-Mail-Adresse für dieses Profil hinterlegt. Bitte wende dich an den Administrator.' });
-        }
-        if (!speaker.email_verified) {
-            return res.status(400).json({ error: 'Deine E-Mail-Adresse ist noch nicht verifiziert. Bitte logge dich ein und bestätige sie zuerst.' });
-        }
+        return res.status(201).json({
+            speakerId: result.insertId,
+            message: 'Registrierung erfolgreich. Bitte E-Mail bestätigen.',
+            emailVerified: false,
+            needsProfile: true
+        });
+    } catch (error) {
+        console.error('Register Error:', error);
+        res.status(500).json({ error: 'Server-Fehler' });
+    }
+});
 
-        // E-Mail senden (falls konfiguriert)
+app.post('/api/update-profile', async (req, res) => {
+    const { speakerId, vorname, nachname, geburtsdatum } = req.body;
+    if (!speakerId || !vorname || !nachname || !geburtsdatum) return res.status(400).json({error: 'Alle Felder müssen ausgefüllt sein'});
+    try {
+        await pool.execute('UPDATE speakers SET vorname=?, nachname=?, geburtsdatum=? WHERE id=?', [vorname, nachname, geburtsdatum, speakerId]);
+        res.json({success: true, vorname});
+    } catch(e) {
+        res.status(500).json({error: 'Fehler beim Speichern des Profils'});
+    }
+});
+
+app.post('/api/forgot-password', async (req, res) => {
+    const { email } = req.body;
+    try {
+        const [rows] = await pool.execute('SELECT id FROM speakers WHERE email = ?', [email]);
+        if (rows.length === 0) return res.status(404).json({ error: 'E-Mail nicht gefunden.' });
+        
+        const newPassword = generateVerificationCode(); 
+        const hashed = hashPassword(newPassword);
+        
+        await pool.execute('UPDATE speakers SET password = ? WHERE email = ?', [hashed, email]);
+        
         if (process.env.SMTP_PASSWORD) {
             const mailOptions = {
                 from: `"Totenbilder.at" <${process.env.SMTP_USER || 'fischervorchdorf@gmx.at'}>`,
-                to: speaker.email,
-                subject: 'Dein Erzähler-PIN für Totenbilder.at',
-                text: `Hallo ${vorname} ${nachname},\n\ndu hast eine Erinnerung für deinen Erzähler-PIN angefordert.\n\nDein PIN lautet: ${speaker.erzaehler_pin}\n\nLiebe Grüße,\nDas Team von Totenbilder.at`,
-                html: `<p>Hallo ${vorname} ${nachname},</p><p>du hast eine Erinnerung für deinen Erzähler-PIN angefordert.</p><p>Dein PIN lautet: <strong>${speaker.erzaehler_pin}</strong></p><p>Liebe Grüße,<br>Das Team von Totenbilder.at</p>`
+                to: email,
+                subject: 'Dein neues Passwort für Totenbilder.at',
+                text: `Hallo,
+
+dein neues Passwort lautet: ${newPassword}
+Du kannst es nach dem Login in deinen Profil-Einstellungen ändern.
+
+Liebe Grüße,
+Das Team von Totenbilder.at`,
             };
             await transporter.sendMail(mailOptions);
-            console.log(`PIN-Wiederherstellung für ${vorname} ${nachname} gesendet an: ${speaker.email}`);
-        } else {
-            console.log(`E-Mail Versand übersprungen (Passwort in .env fehlt). PIN-Info für ${vorname} ${nachname}: PIN: ${speaker.erzaehler_pin}`);
         }
-
-        return res.json({
-            message: `Wiederherstellung eingeleitet. Eine E-Mail mit deinem PIN wurde an ${speaker.email.replace(/(.{2})(.*)(@.*)/, "$1***$3")} gesendet.`
-        });
-
+        res.json({ message: 'Neues Passwort wurde an deine E-Mail gesendet.' });
     } catch (error) {
-        console.error('Forgot PIN Error:', error);
-        res.status(500).json({ error: 'Fehler beim Senden der E-Mail. Bitte probiere es später erneut oder kontaktiere den Support.' });
+        res.status(500).json({ error: 'Server-Fehler' });
     }
 });
 
-// NEU: E-Mail verifizieren
 app.post('/api/verify-email', async (req, res) => {
     const { speakerId, code } = req.body;
     try {
@@ -256,15 +236,14 @@ app.post('/api/verify-email', async (req, res) => {
 app.post('/api/resend-verification', async (req, res) => {
     const { speakerId } = req.body;
     try {
-        const [rows] = await pool.execute('SELECT vorname, email FROM speakers WHERE id = ?', [speakerId]);
+        const [rows] = await pool.execute('SELECT email FROM speakers WHERE id = ?', [speakerId]);
         if (rows.length === 0) return res.status(404).json({ error: 'Nicht gefunden' });
-
         const speaker = rows[0];
         if (!speaker.email) return res.status(400).json({ error: 'Keine E-Mail vorhanden' });
 
         const code = generateVerificationCode();
         await pool.execute('UPDATE speakers SET email_verification_code = ? WHERE id = ?', [code, speakerId]);
-        await sendVerificationEmail(speaker.email, speaker.vorname, code);
+        await sendVerificationEmail(speaker.email, code);
 
         return res.json({ message: 'Neuer Code wurde gesendet.' });
     } catch (e) {
@@ -422,22 +401,71 @@ app.delete('/api/answers/:id', async (req, res) => {
     }
 });
 
-// 4. PINs ändern (für eingeloggte User)
-app.post('/api/change-pin', async (req, res) => {
-    const { speakerId, erzaehlerPin, zuhoererPin } = req.body;
-    if (!speakerId) return res.status(400).json({ error: 'Nicht berechtigt.' });
+// 4. Passwort ändern
+app.post('/api/change-password', async (req, res) => {
+    const { speakerId, oldPassword, newPassword } = req.body;
+    if (!speakerId || !oldPassword || !newPassword) return res.status(400).json({ error: 'Bitte fülle alle Felder aus.' });
 
     try {
-        if (erzaehlerPin) {
-            await pool.execute('UPDATE speakers SET erzaehler_pin = ? WHERE id = ?', [erzaehlerPin, speakerId]);
-        }
-        if (zuhoererPin) {
-            await pool.execute('UPDATE speakers SET zuhoerer_pin = ? WHERE id = ?', [zuhoererPin, speakerId]);
-        }
-        res.json({ success: true, message: 'PINs aktualisiert.' });
+        const hashedOld = hashPassword(oldPassword);
+        const [rows] = await pool.execute('SELECT id FROM speakers WHERE id = ? AND password = ?', [speakerId, hashedOld]);
+        if (rows.length === 0) return res.status(401).json({ error: 'Altes Passwort ist falsch.' });
+
+        const hashedNew = hashPassword(newPassword);
+        await pool.execute('UPDATE speakers SET password = ? WHERE id = ?', [hashedNew, speakerId]);
+        res.json({ success: true, message: 'Passwort erfolgreich geändert.' });
     } catch (e) {
-        console.error('Change PIN Error:', e);
-        res.status(500).json({ error: 'Fehler beim Speichern der neuen PINs in der DB.' });
+        res.status(500).json({ error: 'Server-Fehler' });
+    }
+});
+
+// Listener Invites
+app.post('/api/invite-listener', async (req, res) => {
+    const { speakerId, email } = req.body;
+    if (!speakerId || !email) return res.status(400).json({ error: 'E-Mail erforderlich.' });
+
+    try {
+        const token = generateToken();
+        await pool.execute('INSERT INTO listeners (speaker_id, email, token) VALUES (?, ?, ?)', [speakerId, email, token]);
+        
+        const inviteLink = `${req.headers.origin || 'http://localhost:3000'}/?listener_token=${token}`;
+        if (process.env.SMTP_PASSWORD) {
+            const mailOptions = {
+                from: `"Totenbilder.at" <${process.env.SMTP_USER || 'fischervorchdorf@gmx.at'}>`,
+                to: email,
+                subject: 'Du wurdest eingeladen, einer Lebensgeschichte zuzuhören',
+                text: `Hallo,
+
+du wurdest eingeladen, dir Aufnahmen auf Totenbilder.at anzuhören.
+
+Klicke auf folgenden Link, um zuzuhören:
+${inviteLink}
+
+Liebe Grüße,
+Das Team von Totenbilder.at`,
+                html: `<p>Hallo,</p><p>du wurdest eingeladen, dir Aufnahmen auf Totenbilder.at anzuhören.</p><p><a href="${inviteLink}">Hier klicken, um zuzuhören</a></p><p>Liebe Grüße,<br>Das Team von Totenbilder.at</p>`
+            };
+            await transporter.sendMail(mailOptions);
+        }
+        res.json({ success: true, message: 'Einladung gesendet.' });
+    } catch (e) {
+        res.status(500).json({ error: 'Fehler beim Senden der Einladung.' });
+    }
+});
+
+app.get('/api/listener-auth/:token', async (req, res) => {
+    const { token } = req.params;
+    try {
+        const [rows] = await pool.execute(
+            'SELECT l.speaker_id, s.vorname FROM listeners l JOIN speakers s ON l.speaker_id = s.id WHERE l.token = ?',
+            [token]
+        );
+        if (rows.length === 0) return res.status(401).json({ error: 'Ungültiger oder abgelaufener Einladungslink.' });
+        
+        const data = rows[0];
+        res.json({ speakerId: data.speaker_id, vorname: data.vorname, isZuhoerer: true });
+    } catch (e) {
+        res.status(500).json({ error: 'Server-Fehler' });
     }
 });
 
